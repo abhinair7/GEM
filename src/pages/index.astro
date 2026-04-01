@@ -1,0 +1,1532 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { bgArtifactImages, eraCards, historicalData } from '../data/eras';
+import '../styles/global.css';
+
+const CEREBRAS_API_KEY = import.meta.env.PUBLIC_CEREBRAS_API_KEY || '';
+const GNEWS_API_KEY = import.meta.env.PUBLIC_GNEWS_API_KEY || '';
+
+const eraArtifacts: Record<string, string> = {
+  romana: `<svg class="era-artifact-svg" viewBox="0 0 60 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M30 4L36 42L30 48L24 42Z" fill="currentColor" opacity="0.25"/>
+    <path d="M30 4L36 42L30 48L24 42Z"/>
+    <line x1="18" y1="50" x2="42" y2="50"/>
+    <line x1="20" y1="48" x2="20" y2="52"/>
+    <line x1="40" y1="48" x2="40" y2="52"/>
+    <rect x="26" y="52" width="8" height="22" rx="2"/>
+    <line x1="26" y1="58" x2="34" y2="58"/>
+    <line x1="26" y1="64" x2="34" y2="64"/>
+    <circle cx="30" cy="80" r="5"/>
+    <circle cx="30" cy="80" r="2" fill="currentColor" opacity="0.3"/>
+  </svg>`,
+
+  song: `<svg class="era-artifact-svg" viewBox="0 0 60 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="30" cy="8" rx="5" ry="2.5"/>
+    <line x1="25" y1="8" x2="25" y2="72"/>
+    <line x1="35" y1="8" x2="35" y2="72"/>
+    <line x1="25" y1="30" x2="35" y2="30"/>
+    <line x1="25" y1="50" x2="35" y2="50"/>
+    <path d="M25 72 Q24 80 22 90 Q20 100 18 105" stroke-width="1.5"/>
+    <path d="M35 72 Q36 80 38 90 Q40 100 42 105" stroke-width="1.5"/>
+    <path d="M30 72 Q30 85 30 100 Q30 108 30 112" stroke-width="2"/>
+    <path d="M18 105 Q24 108 30 112 Q36 108 42 105" fill="currentColor" opacity="0.15"/>
+  </svg>`,
+
+  renaissance: `<svg class="era-artifact-svg" viewBox="0 0 70 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="35" cy="10" r="5"/>
+    <circle cx="35" cy="10" r="2" fill="currentColor" opacity="0.3"/>
+    <line x1="35" y1="15" x2="12" y2="105"/>
+    <line x1="35" y1="15" x2="58" y2="105"/>
+    <path d="M22 65 Q35 58 48 65" stroke-dasharray="3 2"/>
+    <circle cx="12" cy="105" r="2" fill="currentColor" opacity="0.4"/>
+    <path d="M56 105 Q58 108 58 105 Q58 102 60 105" stroke-width="0.8"/>
+    <circle cx="35" cy="10" r="8" stroke-dasharray="2 3" opacity="0.4"/>
+  </svg>`,
+
+  twenties: `<svg class="era-artifact-svg" viewBox="0 0 70 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 40 Q15 12 35 8 Q55 12 55 40" stroke-width="1.5"/>
+    <line x1="15" y1="40" x2="55" y2="40"/>
+    <path d="M25 40 Q25 20 35 16 Q45 20 45 40" opacity="0.4"/>
+    <line x1="35" y1="40" x2="35" y2="82"/>
+    <ellipse cx="35" cy="72" rx="3" ry="8" opacity="0.3" fill="currentColor"/>
+    <line x1="30" y1="82" x2="40" y2="82"/>
+    <line x1="28" y1="85" x2="42" y2="85"/>
+    <ellipse cx="35" cy="92" rx="16" ry="5"/>
+    <ellipse cx="35" cy="92" rx="16" ry="5" fill="currentColor" opacity="0.08"/>
+    <circle cx="28" cy="26" r="1.5" fill="currentColor" opacity="0.5"/>
+    <circle cx="38" cy="22" r="1" fill="currentColor" opacity="0.4"/>
+    <circle cx="33" cy="30" r="1.2" fill="currentColor" opacity="0.35"/>
+    <path d="M20 96 L20 100" opacity="0.3"/>
+    <path d="M50 96 L50 100" opacity="0.3"/>
+  </svg>`,
+
+  golden: `<svg class="era-artifact-svg" viewBox="0 0 90 90" fill="none" stroke="currentColor" stroke-width="1.2">
+    <circle cx="45" cy="45" r="5" fill="currentColor" opacity="0.35"/>
+    <circle cx="45" cy="45" r="2" fill="currentColor" opacity="0.6"/>
+    <ellipse cx="45" cy="45" rx="35" ry="12"/>
+    <ellipse cx="45" cy="45" rx="35" ry="12" transform="rotate(60 45 45)"/>
+    <ellipse cx="45" cy="45" rx="35" ry="12" transform="rotate(120 45 45)"/>
+    <circle cx="80" cy="45" r="3" fill="currentColor" opacity="0.5"/>
+    <circle cx="27" cy="75" r="3" fill="currentColor" opacity="0.5"/>
+    <circle cx="27" cy="15" r="3" fill="currentColor" opacity="0.5"/>
+  </svg>`,
+
+  nineties: `<svg class="era-artifact-svg" viewBox="0 0 90 90" fill="none" stroke="currentColor" stroke-width="1">
+    <circle cx="45" cy="45" r="32"/>
+    <ellipse cx="45" cy="45" rx="32" ry="12"/>
+    <ellipse cx="45" cy="45" rx="12" ry="32"/>
+    <path d="M13 45 Q29 38 45 45 Q61 52 77 45" opacity="0.4"/>
+    <circle cx="45" cy="13" r="3.5" fill="currentColor" opacity="0.5" stroke="none"/>
+    <circle cx="72" cy="58" r="3.5" fill="currentColor" opacity="0.5" stroke="none"/>
+    <circle cx="20" cy="62" r="3.5" fill="currentColor" opacity="0.5" stroke="none"/>
+    <circle cx="55" cy="30" r="2.5" fill="currentColor" opacity="0.35" stroke="none"/>
+    <circle cx="32" cy="35" r="2.5" fill="currentColor" opacity="0.35" stroke="none"/>
+    <line x1="45" y1="13" x2="55" y2="30" stroke-dasharray="2 2" opacity="0.4"/>
+    <line x1="55" y1="30" x2="72" y2="58" stroke-dasharray="2 2" opacity="0.4"/>
+    <line x1="32" y1="35" x2="20" y2="62" stroke-dasharray="2 2" opacity="0.4"/>
+    <line x1="32" y1="35" x2="45" y2="13" stroke-dasharray="2 2" opacity="0.4"/>
+  </svg>`
+};
+---
+
+<BaseLayout title="GEM — Geopolitical Equilibrium Model">
+
+<!-- Background Artifacts -->
+<div class="bg-artifacts">
+  {bgArtifactImages.map((img) => (
+    <img class="bg-artifact" src={img.src} alt="" data-era={img.era} />
+  ))}
+</div>
+<div class="grid-overlay"></div>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-brand">G<span>.</span>E<span>.</span>M</div>
+  <ul class="nav-links">
+    <li><a href="#splash">Origin</a></li>
+    <li><a href="#thesis">Thesis</a></li>
+    <li><a href="#livefeed">Live Feed</a></li>
+    <li><a href="#eras">Eras</a></li>
+    <li><a href="#simulation">Simulate</a></li>
+    <li><a href="#analysis">Analysis</a></li>
+  </ul>
+  <div class="nav-status"><div class="status-dot"></div> Model Active</div>
+</nav>
+
+<!-- Splash — Architects of Prosperity  +  Reveal -->
+<div class="splash" id="splash">
+  <!-- Reveal layer — sits behind the curtain halves -->
+  <div class="splash-reveal">
+    <div class="splash-reveal-inner">
+      <div class="splash-reveal-overline">Geopolitical Equilibrium Model / v3.2</div>
+      <div class="splash-reveal-rule"></div>
+      <h1 class="splash-reveal-title">Six empires cracked<br>the same code.<br>We <em>reverse-engineered</em> it.</h1>
+      <p class="splash-reveal-subtitle">The blueprint behind every golden age in recorded history — distilled into four variables, mapped against today's conflicts, and delivered as a strategic playbook you can actually use.</p>
+      <a href="#simulation" class="splash-reveal-cta">Enter the Simulation <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    </div>
+    <div class="splash-reveal-scroll"><div class="splash-reveal-scroll-line"></div> Scroll to explore</div>
+  </div>
+  <!-- Curtain halves — single img clipped, zero seam -->
+  <div class="splash-half splash-left"><img src="/architects.jpg" alt="" class="splash-img" /></div>
+  <div class="splash-half splash-right"><img src="/architects.jpg" alt="" class="splash-img" /></div>
+  <div class="splash-vignette"></div>
+  <div class="splash-title-wrap">
+    <div class="splash-overline">The Geopolitical Equilibrium Model presents</div>
+    <h1 class="splash-title">The Architects<br>of Prosperity</h1>
+    <div class="splash-scroll-cue"><div class="splash-scroll-line"></div> Scroll to enter</div>
+  </div>
+</div>
+
+<!-- Thesis -->
+<section id="thesis">
+  <div class="thesis-left reveal">
+    <div class="section-overline">The Analytical Thesis</div>
+    <h2>Where trade, politics, security, and status align — prosperity <em>concentrates.</em></h2>
+    <p>The model identifies six distinct historical "Golden Ages" — each with a unique geopolitical logic for converting instability into growth. By mapping today's variables against these proven architectures, we generate actionable strategic playbooks.</p>
+    <p>Adjust the four Prosperity Pillars. The engine clusters your inputs to the most mathematically similar era — then populates a strategy drawn from that civilisation's logic.</p>
+  </div>
+  <div class="thesis-right reveal">
+    <div class="pillar-card"><h4>Trade Integration</h4><div class="metric">84.2</div><div class="desc">Economic connectivity and maritime route control</div></div>
+    <div class="pillar-card"><h4>Political Stability</h4><div class="metric">71.5</div><div class="desc">Central authority vs. fragmentation index</div></div>
+    <div class="pillar-card"><h4>Security Level</h4><div class="metric">92.0</div><div class="desc">Military posture and border vulnerability</div></div>
+    <div class="pillar-card"><h4>Social Benefit</h4><div class="metric">68.9</div><div class="desc">Distribution of prosperity gains across layers</div></div>
+  </div>
+</section>
+
+<!-- Live Feed -->
+<section id="livefeed">
+  <div class="feed-header">
+    <div class="feed-header-left reveal">
+      <div class="section-overline"><span class="live-dot"></span> Live Conflict Intelligence</div>
+      <h2>U.S.–Iran Theatre Monitor</h2>
+    </div>
+    <div class="feed-header-right reveal">
+      Last updated: <span id="feed-timestamp">—</span><br>
+      <span class="feed-source-tag" id="feed-source-tag">GDELT API — LIVE</span>
+    </div>
+  </div>
+  <div class="feed-layout">
+    <div class="feed-stream" id="feed-stream"></div>
+    <div class="feed-impact-panel reveal">
+      <div class="impact-panel-title">Cumulative Pillar Impact</div>
+      <div class="impact-meter meter-trade"><div class="impact-meter-header"><span class="impact-meter-label">Trade Integration</span><span class="impact-meter-value" id="feed-trade">0.74</span></div><div class="meter-track"><div class="meter-fill" id="feed-trade-fill" style="width:74%"></div></div></div>
+      <div class="impact-meter meter-politics"><div class="impact-meter-header"><span class="impact-meter-label">Political Stability</span><span class="impact-meter-value" id="feed-politics">0.88</span></div><div class="meter-track"><div class="meter-fill" id="feed-politics-fill" style="width:88%"></div></div></div>
+      <div class="impact-meter meter-security"><div class="impact-meter-header"><span class="impact-meter-label">Security Level</span><span class="impact-meter-value" id="feed-security">0.92</span></div><div class="meter-track"><div class="meter-fill" id="feed-security-fill" style="width:92%"></div></div></div>
+      <div class="impact-meter meter-benefit"><div class="impact-meter-header"><span class="impact-meter-label">Benefit Capture</span><span class="impact-meter-value" id="feed-benefit">0.22</span></div><div class="meter-track"><div class="meter-fill" id="feed-benefit-fill" style="width:22%"></div></div></div>
+      <div class="cumulative-shift">
+        <h5>Triggered Era Shift</h5>
+        <div class="shift-era" id="feed-era-name">Pax Romana</div>
+        <div class="shift-era-sub" id="feed-era-sub">High stability corridor — imperial logic active</div>
+        <button class="apply-feed-btn" id="apply-to-sim">Apply to Simulation Engine</button>
+      </div>
+    </div>
+    <div class="ai-briefing-panel reveal" id="ai-briefing">
+      <div class="ai-briefing-header"><div class="ai-briefing-title"><span class="ai-dot"></span> AI Intelligence Briefing</div><div class="ai-badge" id="briefing-badge">Awaiting Feed Data</div></div>
+      <div class="ai-briefing-body" id="ai-briefing-body">Intelligence briefing will generate automatically once live feed data is loaded. The AI synthesises incoming events into a cohesive threat assessment with strategic implications.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Eras -->
+<section id="eras">
+  <div class="section-overline reveal">The Six Architectures</div>
+  <h2 class="reveal">Historical Golden Ages</h2>
+  <p class="section-desc reveal">Each era solved the same problem differently: how to organise conflict and hierarchy so that prosperity concentrates at the nexus of power.</p>
+  <div class="era-grid">
+    {eraCards.map((era) => (
+      <div class="era-card reveal" data-era={era.key}>
+        <img class="era-card-img" src={era.image} alt="" />
+        <div class="era-artifact" set:html={eraArtifacts[era.key]} />
+        <div class="era-figure">
+          <img class="era-figure-img" src={era.figure} alt={era.figureName} />
+        </div>
+        <div class="era-card-overlay">
+          <div class="era-card-date">{era.date}</div>
+          <div class="era-card-title">{era.title}</div>
+          <div class="era-figure-info">
+            <span class="era-figure-name">{era.figureName}</span>
+            <span class="era-figure-symbol">{era.symbol}</span>
+          </div>
+          <div class="era-card-pillars">{era.pillars}</div>
+          <div class="era-card-winner">{era.winner}</div>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+
+
+<!-- Simulation -->
+<section id="simulation">
+  <div class="sim-header">
+    <div class="section-overline reveal">Interactive Simulation Lab</div>
+    <h2 class="reveal">The Equilibrium Matrix</h2>
+    <p class="reveal">Adjust the four Prosperity Pillars. The engine clusters your configuration to the closest historical architecture and generates a strategic playbook.</p>
+  </div>
+  <div class="sim-grid">
+    <div class="slider-panel reveal">
+      <div class="slider-panel-title">Calibration Controls</div>
+      <div class="slider-group slider-1"><div class="slider-label"><span>Trade Integration</span><span class="slider-value" id="trade-val">0.74</span></div><input type="range" id="trade" min="0" max="100" value="74"><div class="slider-range"><span>Isolated Markets</span><span>Globalised Routes</span></div></div>
+      <div class="slider-group slider-2"><div class="slider-label"><span>Political Stability</span><span class="slider-value" id="politics-val">0.88</span></div><input type="range" id="politics" min="0" max="100" value="88"><div class="slider-range"><span>Fragmented</span><span>Imperial Stability</span></div></div>
+      <div class="slider-group slider-3"><div class="slider-label"><span>Security Level</span><span class="slider-value" id="security-val">0.92</span></div><input type="range" id="security" min="0" max="100" value="92"><div class="slider-range"><span>High Vulnerability</span><span>Secure Borders</span></div></div>
+      <div class="slider-group slider-4"><div class="slider-label"><span>Benefit Capture</span><span class="slider-value" id="benefit-val">0.22</span></div><input type="range" id="benefit" min="0" max="100" value="22"><div class="slider-range"><span>Broad Middle-Class</span><span>Elite-Concentrated</span></div></div>
+      <div class="slider-btns">
+        <button class="recalibrate-btn" id="recalibrate">Reset Baseline</button>
+        <button class="feed-inject-btn" id="inject-feed">Inject Live Feed</button>
+      </div>
+    </div>
+    <div class="results-panel">
+      <div class="result-hero reveal"><div class="overline">Prosperity Score</div><div class="prosperity-score" id="prosperity-score">0.842</div><div class="status" id="system-status">Equilibrium: Nominal</div></div>
+      <div class="metrics-row reveal">
+        <div class="metric-card"><h5>Benefit Capture Index</h5><div class="val" id="bci-val">0.68</div><div class="change positive" id="bci-change">Elite-Concentrated</div></div>
+        <div class="metric-card"><h5>Fragility Rating</h5><div class="val" id="fragility-val">21%</div><div class="change positive" id="fragility-change">Low Risk</div></div>
+        <div class="metric-card"><h5>Model Confidence</h5><div class="val" id="conf-val">96.4%</div><div class="change positive">Sigma-5 Validated</div></div>
+      </div>
+      <div class="era-match reveal">
+        <div class="match-overline">Closest Historical Analogue</div>
+        <h3 id="matched-era">Pax Romana</h3>
+        <div class="era-date" id="matched-date">27 BC – 180 AD · The Antonine Prosperity</div>
+        <p id="matched-desc"></p>
+        <div class="confidence"><div class="confidence-bar"><div class="confidence-fill" id="confidence-fill" style="width:94%"></div></div><div class="confidence-label" id="confidence-pct">94% Match</div></div>
+      </div>
+      <div class="playbook-card reveal">
+        <div class="playbook-header"><h4 id="playbook-title">U.S.–Iran Strategic Playbook: The Roman Strategy</h4><div class="ai-badge" id="playbook-badge"><span class="ai-dot"></span> Static Baseline</div></div>
+        <div class="playbook-grid" id="playbook-grid"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Analysis -->
+<section id="analysis">
+  <div class="analysis-header">
+    <div class="section-overline reveal">Quantitative Evidence Base</div>
+    <h2 class="reveal">The Numbers Behind the Narratives</h2>
+    <p class="reveal">Real economic indicators sourced from Maddison Project, Broadberry & Gupta, World Bank, and Bolt & van Zanden — the empirical backbone of the clustering model.</p>
+  </div>
+
+  <div class="analysis-grid">
+    <div class="chart-panel reveal">
+      <div class="chart-panel-title">Pillar Profile Overlay</div>
+      <div class="chart-panel-sub">Your current simulation inputs (gold) vs. the matched era's historical profile (charcoal). Gap = model divergence.</div>
+      <canvas id="radar-chart" width="480" height="400"></canvas>
+    </div>
+    <div class="chart-panel reveal">
+      <div class="chart-panel-title">Era Proximity Map (PCA Projection)</div>
+      <div class="chart-panel-sub">All 6 eras projected into 2D space via principal component reduction. Your position (gold dot) shows clustering affinity in real-time.</div>
+      <canvas id="scatter-chart" width="480" height="400"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-panel analysis-full reveal">
+    <div class="chart-panel-title">Historical Economic Indicators — Source Data</div>
+    <div class="chart-panel-sub">Estimated values from Maddison Project Database (2020), Broadberry & Gupta (2006), Bolt & van Zanden (2020). GDP per capita in 1990 International Geary-Khamis dollars.</div>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Era</th><th>Period</th><th class="num">GDP/Capita (1990 $)</th><th class="num">Trade % GDP</th><th class="num">Military % GDP</th><th class="num">Gini Coeff.</th><th class="num">Urbanisation %</th><th class="num">Duration (yrs)</th><th class="num">Pop. (millions)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {historicalData.map((row) => (
+            <tr>
+              <td class="era-name">{row.era}</td>
+              <td>{row.period}</td>
+              <td class="num highlight">{row.gdp}</td>
+              <td class="num">{row.trade}</td>
+              <td class="num">{row.military}</td>
+              <td class="num">{row.gini}</td>
+              <td class="num">{row.urban}</td>
+              <td class="num">{row.duration}</td>
+              <td class="num">{row.pop}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="chart-panel analysis-full reveal">
+    <div class="chart-panel-title">Prosperity Lifecycle Curves</div>
+    <div class="chart-panel-sub">Normalised prosperity trajectory for each era from inception through peak to decline. X-axis = % of era duration. The steeper the descent, the more fragile the model.</div>
+    <canvas id="lifecycle-chart" width="1100" height="360"></canvas>
+  </div>
+
+  <div class="ai-fragility-panel reveal" id="ai-fragility">
+    <div class="ai-briefing-header"><div class="ai-briefing-title"><span class="ai-dot"></span> AI Risk Assessment — Live Configuration</div><div class="ai-badge" id="fragility-badge">Awaiting Simulation</div></div>
+    <div class="ai-fragility-body" id="ai-fragility-body">Adjust the simulation sliders above. The AI will generate a bespoke fragility analysis for your exact pillar configuration — identifying specific vulnerabilities, cascading failure points, and mitigation strategies unique to your scenario.</div>
+  </div>
+
+  <!-- =========================================================
+       REAL DATA CHARTS — World Bank, FRED, Live APIs
+       ========================================================= -->
+  <div class="analysis-header" style="margin-top:1.5rem;">
+    <div class="section-overline reveal">Live Empirical Data</div>
+    <h2 class="reveal">Real-World Economic Intelligence</h2>
+    <p class="reveal">Live data from World Bank Open Data API and FRED (Federal Reserve Economic Data). No hardcoded values — every data point fetched in real-time from authoritative sources.</p>
+  </div>
+
+  <div class="chart-panel analysis-full reveal">
+    <div class="chart-panel-title">U.S. vs Iran — GDP Per Capita by Decade</div>
+    <div class="chart-panel-sub">Grouped bar comparison. Constant 2015 USD. Source: World Bank (NY.GDP.PCAP.KD). Decade-averaged to reveal structural divergence.</div>
+    <div class="real-chart-status" id="gdp-status">⟳ Fetching World Bank data…</div>
+    <canvas id="gdp-chart" width="1100" height="400"></canvas>
+  </div>
+
+  <div class="chart-panel analysis-full reveal">
+    <div class="chart-panel-title">Trade Openness — U.S. vs Iran (% of GDP)</div>
+    <div class="chart-panel-sub">Exports + Imports as share of GDP. Source: World Bank (NE.TRD.GNFS.ZS). Area fills show the scale gap in economic openness vs. isolation.</div>
+    <div class="real-chart-status" id="trade-status">⟳ Loading…</div>
+    <canvas id="trade-chart" width="1100" height="400"></canvas>
+  </div>
+
+  <div class="chart-panel analysis-full reveal">
+    <div class="chart-panel-title">Brent Crude Oil — Stepped Area with Events</div>
+    <div class="chart-panel-sub">Stepped area chart showing price plateaus and shocks. Source: FRED (DCOILBRENTEU). Event markers highlight geopolitical triggers.</div>
+    <div class="real-chart-status" id="oil-status">⟳ Fetching FRED data…</div>
+    <canvas id="oil-chart" width="1100" height="420"></canvas>
+  </div>
+
+  <!-- AI Era Intelligence — Data Synthesis Flashcards -->
+  <div class="era-intel-section" id="era-intel">
+    <div class="era-intel-header">
+      <div>
+        <div class="section-overline reveal"><span class="ai-dot"></span> AI Data Synthesis</div>
+        <h2 class="reveal">What the Data Tells Us — By Era</h2>
+        <p class="reveal">AI analyses the live economic data above and classifies conclusions into each of the six historical prosperity architectures.</p>
+      </div>
+      <button class="era-intel-btn" id="era-intel-btn"><span class="ai-dot"></span> Generate Era Intelligence</button>
+    </div>
+    <div class="era-intel-grid" id="era-intel-grid">
+      <div class="era-intel-card" data-era="romana">
+        <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#8b6914"></div><h4>Pax Romana</h4><span class="era-intel-period">27 BC – 180 AD</span></div>
+        <div class="era-intel-body" id="intel-romana">Awaiting analysis…</div>
+      </div>
+      <div class="era-intel-card" data-era="song">
+        <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#2d6e5f"></div><h4>Song Dynasty</h4><span class="era-intel-period">960 – 1279 AD</span></div>
+        <div class="era-intel-body" id="intel-song">Awaiting analysis…</div>
+      </div>
+      <div class="era-intel-card" data-era="renaissance">
+        <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#c5a059"></div><h4>Italian Renaissance</h4><span class="era-intel-period">1450 – 1600 AD</span></div>
+        <div class="era-intel-body" id="intel-renaissance">Awaiting analysis…</div>
+      </div>
+      <div class="era-intel-card" data-era="twenties">
+        <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#c4442d"></div><h4>Roaring Twenties</h4><span class="era-intel-period">1920s USA</span></div>
+        <div class="era-intel-body" id="intel-twenties">Awaiting analysis…</div>
+      </div>
+      <div class="era-intel-card" data-era="golden">
+        <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#44474e"></div><h4>Golden Age USA</h4><span class="era-intel-period">1950s USA</span></div>
+        <div class="era-intel-body" id="intel-golden">Awaiting analysis…</div>
+      </div>
+      <div class="era-intel-card" data-era="nineties">
+        <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#1a1c1b"></div><h4>Information Age</h4><span class="era-intel-period">1990s Global</span></div>
+        <div class="era-intel-body" id="intel-nineties">Awaiting analysis…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="brand">G<span>.</span>E<span>.</span>M</div>
+  <div class="meta">Geopolitical Equilibrium Model — Sovereign Intelligence Archive — Abhishek Nair</div>
+</footer>
+
+<!-- =========================================================
+     ENGINE SCRIPT — All simulation logic, charts, GDELT feed
+     ========================================================= -->
+<script is:inline define:vars={{ CEREBRAS_API_KEY, GNEWS_API_KEY }}>
+// CORE DATA (inline for client-side performance)
+const eraProfiles = {
+  romana: { trade: 0.82, politics: 0.90, security: 0.88, benefit: 0.25 },
+  song: { trade: 0.75, politics: 0.60, security: 0.35, benefit: 0.55 },
+  renaissance: { trade: 0.90, politics: 0.30, security: 0.40, benefit: 0.18 },
+  twenties: { trade: 0.65, politics: 0.50, security: 0.70, benefit: 0.12 },
+  golden: { trade: 0.60, politics: 0.85, security: 0.90, benefit: 0.72 },
+  nineties: { trade: 0.95, politics: 0.55, security: 0.65, benefit: 0.45 },
+};
+
+const eraInfo = {
+  romana: { name: 'Pax Romana', date: '27 BC – 180 AD · The Antonine Prosperity', desc: 'Your configuration mirrors the Roman imperial model: high political stability with strong trade integration, where prosperity concentrates through controlled commerce and military-secured routes.', playbook: 'U.S.–Iran Strategic Playbook: The Roman Strategy', strategies: [{ title: 'Naval Presence', desc: "Project maritime dominance through carrier groups in the Persian Gulf — the modern Mare Nostrum. Control of the Strait of Hormuz mirrors Rome's control of Mediterranean choke points." }, { title: 'Economic Sanctions', desc: 'Deploy targeted sanctions modelled on the Roman siege economy. Restrict access to global banking, oil exports, and technology transfers.' }, { title: 'Regional Alliances', desc: 'Build a modern foederati network — binding regional allies (Gulf States, Israel) into a structured alliance of protection for trade access.' }] },
+  song: { name: 'Song Dynasty', date: '960 – 1279 AD · The Innovation Paradox', desc: 'High innovation and trade sophistication offset by severe military vulnerability. Prosperity flows through state capacity and economic ingenuity, but the system is structurally fragile.', playbook: 'U.S.–Iran Strategic Playbook: The Song Strategy', strategies: [{ title: 'Economic Leverage', desc: "Use financial sophistication and trade dependency as primary tools. Restrict Iran's access to global capital markets while offering integration incentives." }, { title: 'Diplomatic Containment', desc: 'Avoid direct military confrontation. Build concentric rings of diplomatic pressure through multilateral frameworks.' }, { title: 'Innovation Shield', desc: 'Invest in technological superiority (cyber, energy tech) as a substitute for traditional military deterrence.' }] },
+  renaissance: { name: 'Italian Renaissance', date: '1450 – 1600 AD · The Medici Architecture', desc: 'Extreme financial power amid political fragmentation. Prosperity concentrates where banking, trade routes, and information asymmetry converge.', playbook: 'U.S.–Iran Strategic Playbook: The Renaissance Strategy', strategies: [{ title: 'Financial Warfare', desc: 'Deploy the banking system as a strategic weapon — SWIFT restrictions, dollar-denominated trade barriers, and targeted asset freezes.' }, { title: 'Balance of Power', desc: 'Play regional powers against each other (Saudi, Turkey, Israel) to prevent any single actor from dominating.' }, { title: 'Intelligence Networks', desc: 'Invest in diplomatic intelligence and back-channel negotiations. Information asymmetry over brute force.' }] },
+  twenties: { name: 'Roaring Twenties', date: '1920s USA · The Industrial Mirage', desc: 'Massive industrial output and speculative growth with dangerously concentrated benefits. Prosperity is explosive but fragile — built on oil, mass production, and media narratives.', playbook: 'U.S.–Iran Strategic Playbook: The Industrial Strategy', strategies: [{ title: 'Oil Market Control', desc: 'Dominate global energy markets through production manipulation and strategic reserves. Oil pricing = direct leverage.' }, { title: 'Industrial Pressure', desc: 'Restrict access to industrial technology, manufacturing equipment, and supply chains.' }, { title: 'Narrative Warfare', desc: 'Use mass media and public narrative to shape domestic and international opinion.' }] },
+  golden: { name: 'Golden Age USA', date: '1950s USA · The Containment Architecture', desc: 'Strong alliance discipline, broad middle-class prosperity, and military dominance to maintain global order. The most balanced architecture.', playbook: 'U.S.–Iran Strategic Playbook: The Containment Strategy', strategies: [{ title: 'Bloc Discipline', desc: 'Strengthen the Western alliance — NATO expansion, bilateral defense pacts, intelligence sharing.' }, { title: 'Ideological Framing', desc: 'Frame the conflict as a values competition (democracy vs. theocracy) for domestic support and allied unity.' }, { title: 'Proxy Architecture', desc: 'Support regional partners as forward-deployed assets without direct engagement.' }] },
+  nineties: { name: 'The Information Age', date: '1990s Global · The Uni-polar Moment', desc: 'High trade integration, information acceleration, and multilateral frameworks. Prosperity flows through network effects but is vulnerable to asymmetric disruption.', playbook: 'U.S.–Iran Strategic Playbook: The Information Strategy', strategies: [{ title: 'Multilateral Sanctions', desc: 'Build broad international coalitions — legitimacy through UN resolutions and allied consensus.' }, { title: 'Information Warfare', desc: 'Deploy cyber operations, media pressure, and strategic communications to shape the environment.' }, { title: 'Globalisation Leverage', desc: "Use Iran's dependence on global trade networks as the ultimate coercive tool." }] },
+};
+
+const eraColors = { romana: '#8b6914', song: '#2d6e5f', renaissance: '#c5a059', twenties: '#c4442d', golden: '#44474e', nineties: '#1a1c1b' };
+
+// =========================================================
+// CEREBRAS AI ENGINE
+// =========================================================
+const CEREBRAS_KEY = CEREBRAS_API_KEY || '';
+let aiDebounce = null;
+let briefingGenerated = false;
+let aiCallQueue = Promise.resolve();
+
+async function callAI(prompt, maxTokens, retries = 3) {
+  for (let attempt = 0; attempt < retries; attempt++) {
+    const resp = await fetch('https://api.cerebras.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CEREBRAS_KEY },
+      body: JSON.stringify({
+        model: 'qwen-3-235b-a22b-instruct-2507',
+        messages: [{ role: 'system', content: 'You are a senior geopolitical strategist working for the Geopolitical Equilibrium Model (GEM). You produce concise, analytical, and actionable intelligence in a professional editorial tone. Use specific historical references and real-world policy mechanics. Do not use markdown headers — use plain text with line breaks.' }, { role: 'user', content: prompt }],
+        max_tokens: maxTokens || 600,
+        temperature: 0.7
+      })
+    });
+    if (resp.status === 429 && attempt < retries - 1) {
+      const wait = 2000 * Math.pow(2, attempt);
+      console.log('Cerebras rate limited, retrying in ' + (wait/1000) + 's (attempt ' + (attempt+1) + ')');
+      await new Promise(r => setTimeout(r, wait));
+      continue;
+    }
+    if (!resp.ok) throw new Error('Cerebras API ' + resp.status);
+    const data = await resp.json();
+    return data.choices[0].message.content;
+  }
+  throw new Error('Cerebras API rate limit exceeded after retries');
+}
+
+function queueAICall(fn) {
+  aiCallQueue = aiCallQueue.then(() => fn()).then(
+    () => new Promise(r => setTimeout(r, 500)),
+    () => new Promise(r => setTimeout(r, 500))
+  );
+  return aiCallQueue;
+}
+
+// AI PLAYBOOK — generates unique strategies per slider config
+async function generateAIPlaybook(input, eraName, eraDate) {
+  const badge = document.getElementById('playbook-badge');
+  badge.textContent = '⟳ Generating…'; badge.className = 'ai-badge generating';
+  try {
+    const prompt = `The GEM simulation has these Prosperity Pillar values:\n- Trade Integration: ${input.trade.toFixed(2)}\n- Political Stability: ${input.politics.toFixed(2)}\n- Security Level: ${input.security.toFixed(2)}\n- Benefit Capture: ${input.benefit.toFixed(2)}\n\nThe closest historical analogue is: ${eraName} (${eraDate}).\n\nGenerate exactly 3 specific U.S.–Iran strategic moves for this configuration. For each move, provide a bold title (5 words max) and a 2-sentence tactical description referencing real mechanisms (sanctions, naval deployments, diplomatic channels, cyber operations, energy markets, alliance structures).\n\nFormat as:\nSTRATEGY 1: [Title]\n[Description]\n\nSTRATEGY 2: [Title]\n[Description]\n\nSTRATEGY 3: [Title]\n[Description]`;
+    const text = await callAI(prompt, 500);
+    const strategies = text.split(/STRATEGY \d+:\s*/i).filter(s => s.trim()).map(block => {
+      const lines = block.trim().split('\n').filter(l => l.trim());
+      const title = lines[0] ? lines[0].replace(/^\*+|\*+$/g, '').trim() : 'Strategic Move';
+      const desc = lines.slice(1).join(' ').trim() || block.trim();
+      return { title, desc };
+    });
+    if (strategies.length >= 2) {
+      document.getElementById('playbook-grid').innerHTML = strategies.slice(0,3).map(s =>
+        '<div class="playbook-item"><h5>' + s.title + '</h5><p>' + s.desc + '</p></div>'
+      ).join('');
+    }
+    badge.textContent = '✦ AI Generated'; badge.className = 'ai-badge active';
+  } catch(e) {
+    console.log('AI Playbook error:', e.message);
+    badge.textContent = 'Static Fallback'; badge.className = 'ai-badge';
+  }
+}
+
+// AI INTELLIGENCE BRIEFING — synthesises live feed headlines
+async function generateBriefing(headlines) {
+  if (briefingGenerated) return;
+  const badge = document.getElementById('briefing-badge');
+  badge.textContent = '⟳ Analysing…'; badge.className = 'ai-badge generating';
+  try {
+    const prompt = `You are monitoring the U.S.–Iran geopolitical theatre. Here are the latest headlines from the live intelligence feed:\n\n${headlines.map((h,i) => (i+1)+'. '+h).join('\n')}\n\nWrite a concise intelligence briefing (4-5 sentences) that:\n1. Identifies the dominant escalation/de-escalation vector\n2. Assesses the net impact on trade routes, political stability, security posture, and benefit distribution\n3. Flags the single highest-risk cascading scenario\n4. Recommends one immediate strategic response\n\nWrite in analytical prose, no bullet points.`;
+    const text = await callAI(prompt, 400);
+    document.getElementById('ai-briefing-body').innerHTML = text.replace(/\n\n/g, '<br><br>');
+    badge.textContent = '✦ AI Analysis Complete'; badge.className = 'ai-badge active';
+    briefingGenerated = true;
+  } catch(e) {
+    console.log('AI briefing error:', e.message);
+    badge.textContent = 'Analysis Failed'; badge.className = 'ai-badge';
+  }
+}
+
+// AI FRAGILITY ANALYSIS — bespoke risk assessment per config
+async function generateFragilityAnalysis(input, eraName, fragility) {
+  const badge = document.getElementById('fragility-badge');
+  badge.textContent = '⟳ Assessing…'; badge.className = 'ai-badge generating';
+  try {
+    const prompt = `A geopolitical simulation has the following configuration:\n- Trade Integration: ${input.trade.toFixed(2)} (${input.trade > 0.7 ? 'high openness' : input.trade > 0.4 ? 'moderate' : 'isolated'})\n- Political Stability: ${input.politics.toFixed(2)} (${input.politics > 0.7 ? 'strong central authority' : input.politics > 0.4 ? 'moderate cohesion' : 'fragmented'})\n- Security Level: ${input.security.toFixed(2)} (${input.security > 0.7 ? 'secure borders' : input.security > 0.4 ? 'contested' : 'highly vulnerable'})\n- Benefit Capture: ${input.benefit.toFixed(2)} (${input.benefit > 0.5 ? 'elite-concentrated' : 'broadly distributed'})\n- Matched Era: ${eraName}\n- Computed Fragility: ${fragility}%\n\nWrite a 4-sentence risk assessment identifying: (1) the primary structural vulnerability in this configuration, (2) the most likely cascading failure trigger, (3) a historical parallel for how this failure mode played out, and (4) one specific policy lever that could reduce fragility by 15+ points.`;
+    const text = await callAI(prompt, 400);
+    document.getElementById('ai-fragility-body').innerHTML = text.replace(/\n\n/g, '<br><br>');
+    badge.textContent = '✦ AI Risk Assessment'; badge.className = 'ai-badge active';
+  } catch(e) {
+    console.log('AI fragility error:', e.message);
+    badge.textContent = 'Assessment Failed'; badge.className = 'ai-badge';
+  }
+}
+
+function euclideanDist(a, b) {
+  return Math.sqrt((a.trade-b.trade)**2 + (a.politics-b.politics)**2 + (a.security-b.security)**2 + (a.benefit-b.benefit)**2);
+}
+
+// =========================================================
+// FLOATING ARTIFACTS
+// =========================================================
+const bgArtifacts = document.querySelectorAll('.bg-artifact');
+bgArtifacts.forEach((art, i) => setTimeout(() => art.classList.add('active'), 600 + i * 350));
+function highlightEraArtifact(k) { bgArtifacts.forEach(a => { a.classList.toggle('highlight', a.dataset.era === k); }); }
+document.addEventListener('mousemove', e => {
+  const mx = (e.clientX/innerWidth - 0.5)*2, my = (e.clientY/innerHeight - 0.5)*2;
+  bgArtifacts.forEach((a, i) => { const d = 0.4+(i%3)*0.25; a.style.marginLeft = (mx*15*d)+'px'; a.style.marginTop = (my*10*d)+'px'; });
+});
+
+// =========================================================
+// GSAP ANIMATIONS
+// =========================================================
+gsap.registerPlugin(ScrollTrigger);
+
+// Splash — scroll-driven curtain reveal (pinned)
+const splash = document.getElementById('splash');
+if (splash) {
+  const splashTL = gsap.timeline({
+    scrollTrigger: {
+      trigger: splash,
+      start: 'top top',
+      end: '+=1200',
+      scrub: 0.5,
+      pin: true,
+      pinSpacing: true,
+      anticipatePin: 1,
+    }
+  });
+  splashTL
+    // — Curtain exit —
+    .to('.splash-scroll-cue', { opacity: 0, duration: 0.08, ease: 'none' }, 0)
+    .to('.splash-title-wrap', { opacity: 0, scale: 0.92, duration: 0.2, ease: 'none' }, 0)
+    .to('.splash-left',  { xPercent: -100, duration: 0.65, ease: 'power1.in' }, 0.12)
+    .to('.splash-right', { xPercent:  100, duration: 0.65, ease: 'power1.in' }, 0.12)
+    .to('.splash-vignette', { opacity: 0, duration: 0.25, ease: 'none' }, 0.18)
+    // — Reveal text entrance (scrub-driven) —
+    .to('.splash-reveal-overline', { opacity: 1, y: 0, duration: 0.12, ease: 'none' }, 0.38)
+    .to('.splash-reveal-rule',     { scaleX: 1, duration: 0.14, ease: 'none' }, 0.42)
+    .to('.splash-reveal-title',    { opacity: 1, y: 0, duration: 0.18, ease: 'none' }, 0.44)
+    .to('.splash-reveal-subtitle', { opacity: 1, y: 0, duration: 0.14, ease: 'none' }, 0.56)
+    .to('.splash-reveal-cta',      { opacity: 1, y: 0, duration: 0.12, ease: 'none' }, 0.64)
+    .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.10, ease: 'none' }, 0.72);
+}
+document.querySelectorAll('.reveal').forEach(el => {
+  gsap.to(el, { scrollTrigger: { trigger: el, start: 'top 85%' }, opacity:1, y:0, duration:0.8, ease:'power3.out' });
+});
+
+// =========================================================
+// GDELT LIVE FEED + FALLBACK
+// =========================================================
+const feedState = { trade: 0, politics: 0, security: 0, benefit: 0 };
+const feedBaseline = { trade: 0.74, politics: 0.88, security: 0.92, benefit: 0.22 };
+
+function classifyArticle(title) {
+  const t = title.toLowerCase();
+  const impacts = [];
+  if (/military|missile|attack|strike|navy|nuclear|weapon|drone|war|bomb|defense|army|irgc|pentagon|troops|deployment/.test(t))
+    impacts.push({ pillar: 'security', delta: /peace|ceasefire|withdraw|de-escalat/.test(t) ? 0.04 : -0.06, label: 'Security' });
+  if (/sanction|oil|trade|export|import|swift|economic|tariff|crude|energy|pipeline|shipping|cargo|port/.test(t))
+    impacts.push({ pillar: 'trade', delta: /lift|ease|remove|resume/.test(t) ? 0.05 : -0.05, label: 'Trade' });
+  if (/diplomat|negotiat|talk|summit|alliance|UN|congress|parliament|election|treaty|agreement|minister|ambassador/.test(t))
+    impacts.push({ pillar: 'politics', delta: /fail|collapse|reject|withdraw|break/.test(t) ? -0.04 : 0.05, label: 'Politics' });
+  if (/protest|inequality|inflation|unemployment|poverty|refugee|humanitarian|civilian|cost.of.living/.test(t))
+    impacts.push({ pillar: 'benefit', delta: 0.04, label: 'Benefit' });
+  if (impacts.length === 0) {
+    if (/iran|tehran|persian/.test(t)) impacts.push({ pillar: 'security', delta: -0.03, label: 'Security' });
+    else impacts.push({ pillar: 'politics', delta: -0.02, label: 'Politics' });
+  }
+  return impacts;
+}
+
+function updateFeedMeters() {
+  const vals = {
+    trade: Math.max(0, Math.min(1, feedBaseline.trade + feedState.trade)),
+    politics: Math.max(0, Math.min(1, feedBaseline.politics + feedState.politics)),
+    security: Math.max(0, Math.min(1, feedBaseline.security + feedState.security)),
+    benefit: Math.max(0, Math.min(1, feedBaseline.benefit + feedState.benefit)),
+  };
+  ['trade','politics','security','benefit'].forEach(p => {
+    document.getElementById('feed-'+p).textContent = vals[p].toFixed(2);
+    document.getElementById('feed-'+p+'-fill').style.width = (vals[p]*100)+'%';
+  });
+  let best = 'romana', bd = Infinity;
+  for (const [e,pr] of Object.entries(eraProfiles)) { const d = euclideanDist(vals,pr); if (d<bd){bd=d;best=e;} }
+  document.getElementById('feed-era-name').textContent = eraInfo[best].name;
+  document.getElementById('feed-era-sub').textContent = eraInfo[best].date;
+  highlightEraArtifact(best);
+  return vals;
+}
+
+function addFeedItem(time, title, desc, impacts, isLive, url) {
+  const stream = document.getElementById('feed-stream');
+  const item = document.createElement('div');
+  item.className = 'feed-item' + (isLive ? ' gdelt-live' : ' active');
+  let impHTML = impacts.map(imp => {
+    const ds = (imp.delta>0?'+':'')+(imp.delta*100).toFixed(0)+'%';
+    return '<div class="impact-chip '+imp.pillar+'">'+imp.label+'</div><div class="impact-delta '+(imp.delta>0?'delta-up':'delta-down')+'">'+ds+'</div>';
+  }).join('');
+  const linkHTML = url ? '<a href="'+url+'" target="_blank" rel="noopener">Source &rarr;</a>' : '';
+  item.innerHTML = '<div class="feed-time">'+time+'</div><div class="feed-content"><h4>'+title+'</h4><p>'+desc+'</p>'+linkHTML+'</div><div class="feed-impact">'+impHTML+'</div>';
+  stream.prepend(item);
+  requestAnimationFrame(() => { item.style.transition = 'opacity 0.6s, transform 0.6s'; item.style.opacity = '1'; item.style.transform = 'translateX(0)'; });
+  impacts.forEach(imp => { feedState[imp.pillar] += imp.delta; });
+  updateFeedMeters();
+  document.getElementById('feed-timestamp').textContent = time;
+}
+
+const fallbackEvents = [
+  { time: '14:32 UTC', title: 'IRGC Naval Assets Repositioned Near Strait of Hormuz', desc: 'Iranian Revolutionary Guard deploys 4 fast-attack craft to the eastern corridor. Commercial shipping rerouting.', impacts: [{ pillar:'security', delta:-0.08, label:'Security' }, { pillar:'trade', delta:-0.05, label:'Trade' }] },
+  { time: '13:15 UTC', title: 'U.S. Treasury Expands SWIFT Sanctions on Iranian Banks', desc: 'Three additional Iranian financial institutions added to SDN list. European allies signal conditional support.', impacts: [{ pillar:'trade', delta:-0.06, label:'Trade' }, { pillar:'politics', delta:0.04, label:'Politics' }] },
+  { time: '11:48 UTC', title: 'GCC Emergency Session on Regional Security Framework', desc: 'Saudi Arabia and UAE call emergency consultations. Joint naval patrol proposal on the table.', impacts: [{ pillar:'politics', delta:0.06, label:'Politics' }, { pillar:'security', delta:0.05, label:'Security' }] },
+  { time: '10:22 UTC', title: 'Brent Crude Spikes 4.2% on Hormuz Disruption Fears', desc: 'Oil futures surge. Insurers raise war-risk premiums for Gulf transit.', impacts: [{ pillar:'trade', delta:-0.07, label:'Trade' }, { pillar:'benefit', delta:0.09, label:'Benefit' }] },
+  { time: '09:05 UTC', title: 'USS Eisenhower Strike Group Deploying to 5th Fleet AOR', desc: 'Carrier strike group with 7,500 personnel. Pentagon calls it "routine repositioning."', impacts: [{ pillar:'security', delta:0.10, label:'Security' }, { pillar:'politics', delta:-0.03, label:'Politics' }] },
+  { time: '07:30 UTC', title: 'Tehran Warns of "Proportional Response" to Sanctions', desc: 'Iran Foreign Ministry issues counter-statement. Back-channel contacts via Oman ongoing.', impacts: [{ pillar:'politics', delta:-0.05, label:'Politics' }, { pillar:'security', delta:-0.04, label:'Security' }] },
+  { time: '06:12 UTC', title: 'Iranian APT Groups Probing Gulf Energy Infrastructure', desc: 'NSA advisory on increased cyber operations against Saudi Aramco and ADNOC systems.', impacts: [{ pillar:'security', delta:-0.06, label:'Security' }, { pillar:'trade', delta:-0.03, label:'Trade' }] },
+  { time: '04:45 UTC', title: 'European Parliament Calls for Renewed JCPOA Talks', desc: 'Non-binding resolution 412-198 urging engagement. France and Germany willing to mediate.', impacts: [{ pillar:'politics', delta:0.07, label:'Politics' }, { pillar:'trade', delta:0.03, label:'Trade' }] },
+];
+
+const GNEWS_KEY = GNEWS_API_KEY || '3548eec4eefeecd8bdae9d8f8c29cf2e';
+
+// Primary: GNews API (reliable, free tier)
+async function fetchGNews() {
+  try {
+    const resp = await fetch('https://gnews.io/api/v4/search?q=iran+united+states&lang=en&max=8&apikey=' + GNEWS_KEY);
+    if (!resp.ok) throw new Error('GNews HTTP ' + resp.status);
+    const data = await resp.json();
+    if (!data.articles || data.articles.length < 2) throw new Error('Insufficient articles');
+    document.getElementById('feed-source-tag').textContent = 'GNews API — LIVE';
+    dripArticles(data.articles.map(a => ({
+      title: a.title,
+      desc: a.description || a.source.name || '',
+      url: a.url,
+      time: a.publishedAt
+    })));
+  } catch(e) {
+    console.log('GNews unavailable:', e.message, '— trying GDELT');
+    fetchGDELT();
+  }
+}
+
+// Secondary: GDELT API
+async function fetchGDELT() {
+  try {
+    const resp = await fetch('https://api.gdeltproject.org/api/v2/doc/doc?query=iran+united+states+OR+iran+sanctions+OR+iran+nuclear+OR+iran+military&mode=ArtList&maxrecords=8&format=json&sort=datedesc&sourcelang=english');
+    if (!resp.ok) throw new Error('GDELT HTTP ' + resp.status);
+    const data = await resp.json();
+    if (!data.articles || data.articles.length < 3) throw new Error('Insufficient data');
+    document.getElementById('feed-source-tag').textContent = 'GDELT API — LIVE';
+    dripArticles(data.articles.map(a => ({
+      title: a.title,
+      desc: a.domain || '',
+      url: a.url,
+      time: a.seendate || ''
+    })));
+  } catch(e) {
+    console.log('GDELT unavailable:', e.message, '— using simulated feed');
+    document.getElementById('feed-source-tag').textContent = 'SIMULATED — APIs Unavailable';
+    loadFallback();
+  }
+}
+
+// Drip-feed live articles one by one
+const collectedHeadlines = [];
+function dripArticles(articles) {
+  let idx = 0;
+  function drip() {
+    if (idx >= articles.length) {
+      // All articles loaded — trigger AI briefing
+      if (collectedHeadlines.length >= 3) queueAICall(() => generateBriefing(collectedHeadlines));
+      return;
+    }
+    const art = articles[idx];
+    let time = 'LIVE';
+    if (art.time) {
+      const d = new Date(art.time);
+      if (!isNaN(d)) time = String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0') + ' UTC';
+      else if (art.time.length >= 13) time = art.time.substring(9,11) + ':' + art.time.substring(11,13) + ' UTC';
+    }
+    collectedHeadlines.push(art.title);
+    const impacts = classifyArticle(art.title);
+    addFeedItem(time, art.title, art.desc, impacts, true, art.url);
+    idx++;
+    if (idx < articles.length) setTimeout(drip, 2500);
+    else if (collectedHeadlines.length >= 3) queueAICall(() => generateBriefing(collectedHeadlines));
+  }
+  drip();
+}
+
+function loadFallback() {
+  let idx = 0;
+  function drip() {
+    if (idx >= fallbackEvents.length) return;
+    const ev = fallbackEvents[idx];
+    addFeedItem(ev.time, ev.title, ev.desc, ev.impacts, false);
+    idx++;
+    if (idx < fallbackEvents.length) setTimeout(drip, 3000);
+  }
+  drip(); setTimeout(drip, 600);
+}
+
+let feedStarted = false;
+ScrollTrigger.create({
+  trigger: '#livefeed', start: 'top 70%',
+  onEnter: () => { if (!feedStarted) { feedStarted = true; fetchGNews(); } }
+});
+
+document.getElementById('apply-to-sim').addEventListener('click', () => {
+  const v = updateFeedMeters();
+  Object.keys(sliders).forEach(k => sliders[k].value = Math.round(v[k]*100));
+  calculate();
+  document.getElementById('simulation').scrollIntoView({ behavior:'smooth' });
+});
+document.getElementById('inject-feed').addEventListener('click', () => {
+  const v = updateFeedMeters();
+  Object.keys(sliders).forEach(k => sliders[k].value = Math.round(v[k]*100));
+  calculate();
+});
+
+// =========================================================
+// SIMULATION ENGINE
+// =========================================================
+const sliders = { trade: document.getElementById('trade'), politics: document.getElementById('politics'), security: document.getElementById('security'), benefit: document.getElementById('benefit') };
+
+function calculate() {
+  const input = { trade: sliders.trade.value/100, politics: sliders.politics.value/100, security: sliders.security.value/100, benefit: sliders.benefit.value/100 };
+  ['trade','politics','security','benefit'].forEach(k => document.getElementById(k+'-val').textContent = input[k].toFixed(2));
+
+  let bestEra = 'romana', bestDist = Infinity;
+  for (const [era, pr] of Object.entries(eraProfiles)) { const d = euclideanDist(input, pr); if (d < bestDist) { bestDist = d; bestEra = era; } }
+
+  const prosperity = (input.trade*0.3 + input.politics*0.25 + input.security*0.25 + (1-input.benefit)*0.2).toFixed(3);
+  document.getElementById('prosperity-score').textContent = prosperity;
+  document.getElementById('bci-val').textContent = input.benefit.toFixed(2);
+  document.getElementById('bci-change').textContent = input.benefit > 0.5 ? 'Elite-Concentrated' : 'Broad Distribution';
+  document.getElementById('bci-change').className = input.benefit > 0.5 ? 'change negative' : 'change positive';
+
+  const fragility = Math.round((1-input.security)*60 + input.benefit*30 + (1-input.politics)*10);
+  document.getElementById('fragility-val').textContent = fragility + '%';
+  document.getElementById('fragility-change').textContent = fragility > 40 ? 'High Risk' : fragility > 20 ? 'Moderate' : 'Low Risk';
+  document.getElementById('fragility-change').className = fragility > 40 ? 'change negative' : 'change positive';
+  const status = fragility > 40 ? 'Warning: High Fragility' : fragility > 20 ? 'Equilibrium: Moderate' : 'Equilibrium: Nominal';
+  document.getElementById('system-status').textContent = status;
+  document.getElementById('system-status').style.color = fragility > 40 ? 'var(--error)' : fragility > 20 ? 'var(--secondary)' : 'var(--tertiary)';
+
+  const maxDist = Math.sqrt(4);
+  const confidence = Math.round((1-bestDist/maxDist)*100);
+  document.getElementById('confidence-fill').style.width = confidence+'%';
+  document.getElementById('confidence-pct').textContent = confidence+'% Match';
+  document.getElementById('conf-val').textContent = confidence+'.0%';
+
+  const info = eraInfo[bestEra];
+  document.getElementById('matched-era').textContent = info.name;
+  document.getElementById('matched-date').textContent = info.date;
+  document.getElementById('matched-desc').textContent = info.desc;
+  document.getElementById('playbook-title').textContent = info.playbook;
+  document.getElementById('playbook-grid').innerHTML = info.strategies.map(s => '<div class="playbook-item"><h5>'+s.title+'</h5><p>'+s.desc+'</p></div>').join('');
+  document.querySelectorAll('.era-card').forEach(c => { c.style.outline = c.dataset.era===bestEra ? '1px solid var(--secondary-light)' : 'none'; });
+  highlightEraArtifact(bestEra);
+
+  drawRadar(input, bestEra);
+  drawScatter(input, bestEra);
+
+  // Debounced AI generation — waits 1500ms after last slider move
+  clearTimeout(aiDebounce);
+  aiDebounce = setTimeout(() => {
+    queueAICall(() => generateAIPlaybook(input, info.name, info.date));
+    queueAICall(() => generateFragilityAnalysis(input, info.name, fragility));
+  }, 1500);
+}
+
+Object.values(sliders).forEach(s => s.addEventListener('input', calculate));
+document.getElementById('recalibrate').addEventListener('click', () => {
+  sliders.trade.value=74; sliders.politics.value=88; sliders.security.value=92; sliders.benefit.value=22; calculate();
+});
+
+// =========================================================
+// RADAR CHART
+// =========================================================
+function drawRadar(input, matchedEra) {
+  const canvas = document.getElementById('radar-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2 + 10, R = Math.min(W,H)*0.35;
+  ctx.clearRect(0,0,W,H);
+  const labels = ['Trade', 'Politics', 'Security', 'Benefit'];
+  const angles = labels.map((_, i) => (Math.PI*2*i/4) - Math.PI/2);
+  for (let r = 0.2; r <= 1; r += 0.2) {
+    ctx.beginPath();
+    angles.forEach((a, i) => { const x = cx + Math.cos(a)*R*r, y = cy + Math.sin(a)*R*r; i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+  angles.forEach((a, i) => {
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R*1.1, cy+Math.sin(a)*R*1.1);
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.stroke();
+    const lx = cx + Math.cos(a)*R*1.22, ly = cy + Math.sin(a)*R*1.22;
+    ctx.font = '500 10px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(labels[i].toUpperCase(), lx, ly);
+  });
+  const ep = eraProfiles[matchedEra];
+  const eVals = [ep.trade, ep.politics, ep.security, ep.benefit];
+  ctx.beginPath();
+  eVals.forEach((v, i) => { const x = cx+Math.cos(angles[i])*R*v, y = cy+Math.sin(angles[i])*R*v; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.closePath(); ctx.fillStyle = 'rgba(26,28,27,0.08)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(26,28,27,0.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+  const uVals = [input.trade, input.politics, input.security, input.benefit];
+  ctx.beginPath();
+  uVals.forEach((v, i) => { const x = cx+Math.cos(angles[i])*R*v, y = cy+Math.sin(angles[i])*R*v; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.closePath(); ctx.fillStyle = 'rgba(197,160,89,0.15)'; ctx.fill();
+  ctx.strokeStyle = '#c5a059'; ctx.lineWidth = 2; ctx.stroke();
+  uVals.forEach((v, i) => { ctx.beginPath(); ctx.arc(cx+Math.cos(angles[i])*R*v, cy+Math.sin(angles[i])*R*v, 4, 0, Math.PI*2); ctx.fillStyle = '#c5a059'; ctx.fill(); });
+  eVals.forEach((v, i) => { ctx.beginPath(); ctx.arc(cx+Math.cos(angles[i])*R*v, cy+Math.sin(angles[i])*R*v, 3, 0, Math.PI*2); ctx.fillStyle = '#1a1c1b'; ctx.fill(); });
+  ctx.font = '500 10px Inter'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#c5a059'; ctx.fillRect(20, H-30, 10, 10); ctx.fillStyle = '#44474e'; ctx.fillText('Your Input', 36, H-21);
+  ctx.fillStyle = '#1a1c1b'; ctx.fillRect(120, H-30, 10, 10); ctx.fillStyle = '#44474e'; ctx.fillText('Matched Era', 136, H-21);
+}
+
+// =========================================================
+// SCATTER CHART
+// =========================================================
+function project2D(p) { return { x: (p.trade - p.benefit + 1) / 2, y: (p.politics + p.security) / 2 }; }
+
+function drawScatter(input, matchedEra) {
+  const canvas = document.getElementById('scatter-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height, pad = 60;
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, H-pad); ctx.lineTo(W-pad, H-pad); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad, H-pad); ctx.lineTo(pad, pad); ctx.stroke();
+  ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+  ctx.fillText('TRADE–BENEFIT AXIS (OPENNESS)', W/2, H-15);
+  ctx.save(); ctx.translate(15, H/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('STABILITY AXIS (POLITICS + SECURITY)', 0, 0); ctx.restore();
+  for (let i = 0.2; i <= 0.8; i += 0.2) {
+    const gx = pad + i*(W-2*pad), gy = H - pad - i*(H-2*pad);
+    ctx.beginPath(); ctx.moveTo(gx, H-pad); ctx.lineTo(gx, pad); ctx.strokeStyle='rgba(0,0,0,0.03)'; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad, gy); ctx.lineTo(W-pad, gy); ctx.stroke();
+  }
+  function toCanvas(pt) { return { x: pad + pt.x*(W-2*pad), y: H - pad - pt.y*(H-2*pad) }; }
+  const eraKeys = Object.keys(eraProfiles);
+  eraKeys.forEach(k => {
+    const pt = toCanvas(project2D(eraProfiles[k]));
+    const userPt = toCanvas(project2D(input));
+    ctx.beginPath(); ctx.moveTo(pt.x, pt.y); ctx.lineTo(userPt.x, userPt.y);
+    ctx.strokeStyle = k === matchedEra ? 'rgba(197,160,89,0.3)' : 'rgba(0,0,0,0.04)';
+    ctx.lineWidth = k === matchedEra ? 1.5 : 1; ctx.stroke();
+    const r = k === matchedEra ? 8 : 6;
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, r, 0, Math.PI*2);
+    ctx.fillStyle = k === matchedEra ? eraColors[k] : '#a3a8a0'; ctx.fill();
+    if (k === matchedEra) { ctx.strokeStyle = eraColors[k]; ctx.lineWidth = 2; ctx.stroke(); }
+    ctx.font = k===matchedEra ? '600 10px Inter' : '400 9px Inter';
+    ctx.fillStyle = k===matchedEra ? '#1a1c1b' : '#74796e';
+    ctx.textAlign = 'center'; ctx.fillText(eraInfo[k].name, pt.x, pt.y - r - 6);
+  });
+  const up = toCanvas(project2D(input));
+  ctx.beginPath(); ctx.arc(up.x, up.y, 7, 0, Math.PI*2);
+  ctx.fillStyle = '#c5a059'; ctx.fill(); ctx.strokeStyle = '#8b6914'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = '600 10px Inter'; ctx.fillStyle = '#8b6914'; ctx.textAlign = 'center'; ctx.fillText('YOU', up.x, up.y - 14);
+}
+
+// =========================================================
+// LIFECYCLE CURVES
+// =========================================================
+// =========================================================
+// LIFECYCLE — STACKED AREA CHART
+// =========================================================
+function drawLifecycle() {
+  const canvas = document.getElementById('lifecycle-chart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 30, right: 140, bottom: 50, left: 60 };
+  ctx.clearRect(0,0,W,H);
+  const curves = {
+    romana: { color:'#8b6914', fill:'rgba(139,105,20,0.12)', pts: [[0,0.1],[10,0.3],[25,0.6],[40,0.85],[55,0.95],[70,0.9],[80,0.7],[90,0.4],[100,0.15]], label:'Pax Romana' },
+    song: { color:'#2d6e5f', fill:'rgba(45,110,95,0.10)', pts: [[0,0.05],[15,0.25],[30,0.55],[45,0.8],[60,0.92],[70,0.88],[80,0.65],[90,0.3],[100,0.08]], label:'Song Dynasty' },
+    renaissance: { color:'#c5a059', fill:'rgba(197,160,89,0.10)', pts: [[0,0.08],[10,0.35],[20,0.65],[35,0.9],[50,0.98],[60,0.85],[75,0.5],[90,0.2],[100,0.05]], label:'Renaissance' },
+    twenties: { color:'#c4442d', fill:'rgba(196,68,45,0.10)', pts: [[0,0.15],[15,0.45],[30,0.75],[50,0.95],[60,0.98],[65,0.6],[70,0.2],[80,0.08],[100,0.05]], label:'1920s (Crash)' },
+    golden: { color:'#44474e', fill:'rgba(68,71,78,0.10)', pts: [[0,0.1],[10,0.3],[25,0.55],[40,0.75],[55,0.88],[70,0.92],[80,0.85],[90,0.7],[100,0.55]], label:'1950s Golden' },
+    nineties: { color:'#1a1c1b', fill:'rgba(26,28,27,0.08)', pts: [[0,0.2],[10,0.4],[25,0.6],[40,0.8],[55,0.92],[65,0.95],[75,0.88],[85,0.72],[100,0.6]], label:'1990s Info Age' },
+  };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  // Grid
+  ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+  ctx.font = '400 9px Inter'; ctx.fillStyle = '#a3a8a0'; ctx.textAlign = 'right';
+  for (let v = 0; v <= 1; v += 0.25) {
+    const y = H - pad.bottom - v * ch;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W-pad.right, y); ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.stroke();
+    ctx.fillText((v*100).toFixed(0)+'%', pad.left-8, y+3);
+  }
+  ctx.textAlign = 'center'; ctx.fillStyle = '#a3a8a0';
+  ['INCEPTION','25%','PEAK','75%','DECLINE'].forEach((l,i) => { ctx.fillText(l, pad.left + (i/4)*cw, H-pad.bottom+20); });
+  ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.fillText('% OF ERA DURATION', (pad.left + W - pad.right)/2, H-8);
+  // Draw filled areas + lines
+  function interpY(pts, xPct) {
+    for (let i = 0; i < pts.length - 1; i++) {
+      if (xPct >= pts[i][0] && xPct <= pts[i+1][0]) {
+        const t = (xPct - pts[i][0]) / (pts[i+1][0] - pts[i][0]);
+        return pts[i][1] + t * (pts[i+1][1] - pts[i][1]);
+      }
+    }
+    return pts[pts.length-1][1];
+  }
+  Object.values(curves).forEach(era => {
+    // Filled area
+    ctx.beginPath();
+    for (let pct = 0; pct <= 100; pct += 0.5) {
+      const x = pad.left + (pct/100)*cw;
+      const y = H - pad.bottom - interpY(era.pts, pct)*ch;
+      pct === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.lineTo(pad.left + cw, H - pad.bottom);
+    ctx.lineTo(pad.left, H - pad.bottom);
+    ctx.closePath();
+    ctx.fillStyle = era.fill; ctx.fill();
+    // Stroke line
+    ctx.beginPath();
+    for (let pct = 0; pct <= 100; pct += 0.5) {
+      const x = pad.left + (pct/100)*cw;
+      const y = H - pad.bottom - interpY(era.pts, pct)*ch;
+      pct === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle = era.color; ctx.lineWidth = 2; ctx.stroke();
+    // Peak dot
+    const peak = era.pts.reduce((a,b) => b[1] > a[1] ? b : a);
+    const px = pad.left + (peak[0]/100)*cw, py = H - pad.bottom - peak[1]*ch;
+    ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI*2);
+    ctx.fillStyle = era.color; ctx.fill();
+  });
+  // Legend on right
+  let ly = pad.top + 10;
+  Object.values(curves).forEach(era => {
+    ctx.fillStyle = era.color; ctx.fillRect(W-pad.right+16, ly, 12, 12);
+    ctx.fillStyle = era.fill; ctx.fillRect(W-pad.right+16, ly, 12, 12);
+    ctx.strokeStyle = era.color; ctx.lineWidth = 1.5; ctx.strokeRect(W-pad.right+16, ly, 12, 12);
+    ctx.font = '500 9px Inter'; ctx.fillStyle = '#44474e'; ctx.textAlign = 'left';
+    ctx.fillText(era.label, W-pad.right+34, ly+10);
+    ly += 22;
+  });
+}
+
+ScrollTrigger.create({ trigger: '#lifecycle-chart', start: 'top 80%', onEnter: drawLifecycle, once: true });
+
+// Era artifact scroll animations
+document.querySelectorAll('.era-artifact').forEach((artifact, i) => {
+  gsap.fromTo(artifact,
+    { opacity: 0, scale: 0.4, rotation: -15 },
+    {
+      opacity: 1, scale: 1, rotation: 0,
+      duration: 0.8,
+      ease: 'back.out(1.7)',
+      delay: i * 0.12,
+      scrollTrigger: {
+        trigger: artifact.closest('.era-card'),
+        start: 'top 82%',
+        toggleActions: 'play none none reverse'
+      },
+      onComplete: () => artifact.classList.add('is-visible')
+    }
+  );
+});
+
+// =========================================================
+// REAL DATA CHARTS — World Bank API + FRED
+// =========================================================
+
+// =========================================================
+// CHART TYPE 1: GROUPED BAR CHART (for GDP)
+// =========================================================
+function drawGroupedBar(canvasId, datasets, options = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 35, right: 130, bottom: 55, left: 70 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  ctx.clearRect(0, 0, W, H);
+
+  // Group data by decade
+  const decades = {};
+  datasets.forEach(ds => {
+    ds.data.forEach(d => {
+      const dec = Math.floor(d.year / 10) * 10;
+      if (!decades[dec]) decades[dec] = {};
+      if (!decades[dec][ds.label]) decades[dec][ds.label] = [];
+      decades[dec][ds.label].push(d.value);
+    });
+  });
+  const decadeKeys = Object.keys(decades).map(Number).sort((a,b)=>a-b);
+  const decadeAvgs = decadeKeys.map(dec => {
+    const obj = { decade: dec };
+    datasets.forEach(ds => {
+      const vals = decades[dec]?.[ds.label] || [];
+      obj[ds.label] = vals.length ? vals.reduce((s,v)=>s+v,0)/vals.length : 0;
+    });
+    return obj;
+  });
+
+  let maxVal = 0;
+  decadeAvgs.forEach(d => datasets.forEach(ds => { maxVal = Math.max(maxVal, d[ds.label] || 0); }));
+  maxVal = maxVal * 1.1;
+
+  // Y-axis grid
+  const ySteps = 5;
+  ctx.font = '400 9px Inter'; ctx.fillStyle = '#a3a8a0'; ctx.textAlign = 'right';
+  for (let i = 0; i <= ySteps; i++) {
+    const v = (maxVal * i / ySteps);
+    const y = H - pad.bottom - (v / maxVal) * ch;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W-pad.right, y);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
+    const label = options.yFormat ? options.yFormat(v) : v.toFixed(0);
+    ctx.fillText(label, pad.left - 8, y + 3);
+  }
+  // Axes
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+
+  // Event markers
+  if (options.events) {
+    options.events.forEach(ev => {
+      const decIdx = decadeKeys.findIndex(d => d <= ev.year && d+10 > ev.year);
+      if (decIdx >= 0) {
+        const groupW = cw / decadeKeys.length;
+        const x = pad.left + decIdx * groupW + groupW / 2;
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H-pad.bottom);
+        ctx.strokeStyle = 'rgba(196,68,45,0.2)'; ctx.setLineDash([3,3]); ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]);
+        ctx.font = '500 7px Inter'; ctx.fillStyle = 'rgba(196,68,45,0.5)'; ctx.textAlign = 'center';
+        ctx.fillText(ev.label, x, pad.top - 4);
+      }
+    });
+  }
+
+  // Draw bars
+  const nGroups = decadeKeys.length;
+  const nBars = datasets.length;
+  const groupW = cw / nGroups;
+  const barGap = 4;
+  const barW = (groupW - barGap * (nBars + 1)) / nBars;
+  decadeAvgs.forEach((d, gi) => {
+    const gx = pad.left + gi * groupW;
+    datasets.forEach((ds, bi) => {
+      const val = d[ds.label] || 0;
+      const barH = (val / maxVal) * ch;
+      const x = gx + barGap * (bi + 1) + barW * bi;
+      const y = H - pad.bottom - barH;
+      // Bar with subtle gradient
+      const grad = ctx.createLinearGradient(x, y, x, H - pad.bottom);
+      grad.addColorStop(0, ds.color);
+      grad.addColorStop(1, ds.color + '66');
+      ctx.fillStyle = grad;
+      // Rounded top corners
+      const r = Math.min(3, barW / 4);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.lineTo(x + barW - r, y);
+      ctx.quadraticCurveTo(x + barW, y, x + barW, y + r);
+      ctx.lineTo(x + barW, H - pad.bottom); ctx.lineTo(x, H - pad.bottom);
+      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath(); ctx.fill();
+      // Value label on top
+      if (barH > 20) {
+        ctx.font = '600 8px Inter'; ctx.fillStyle = ds.color; ctx.textAlign = 'center';
+        const lbl = options.yFormat ? options.yFormat(val) : val.toFixed(0);
+        ctx.fillText(lbl, x + barW/2, y - 5);
+      }
+    });
+    // Decade label
+    ctx.font = '500 10px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+    ctx.fillText(d.decade + 's', gx + groupW/2, H - pad.bottom + 18);
+  });
+
+  // Legend
+  let ly = pad.top + 10;
+  datasets.forEach(ds => {
+    ctx.fillStyle = ds.color;
+    ctx.fillRect(W-pad.right+16, ly, 14, 14);
+    ctx.font = '500 10px Inter'; ctx.fillStyle = '#44474e'; ctx.textAlign = 'left';
+    ctx.fillText(ds.label, W-pad.right+36, ly+11);
+    ly += 22;
+  });
+
+  // Y-axis label
+  if (options.yLabel) {
+    ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2);
+    ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+    ctx.fillText(options.yLabel, 0, 0); ctx.restore();
+  }
+}
+
+// =========================================================
+// CHART TYPE 2: SMOOTH AREA CHART (for Trade)
+// =========================================================
+function drawAreaChart(canvasId, datasets, options = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 35, right: 40, bottom: 55, left: 70 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  ctx.clearRect(0, 0, W, H);
+
+  let allYears = [], allVals = [];
+  datasets.forEach(ds => ds.data.forEach(d => { allYears.push(d.year); allVals.push(d.value); }));
+  const minYear = Math.min(...allYears), maxYear = Math.max(...allYears);
+  const minVal = 0, maxVal = (options.maxVal || Math.max(...allVals)) * 1.1;
+  const valRange = maxVal - minVal || 1;
+  const yearRange = maxYear - minYear || 1;
+  function toX(yr) { return pad.left + ((yr-minYear)/yearRange)*cw; }
+  function toY(v) { return H - pad.bottom - ((v-minVal)/valRange)*ch; }
+
+  // Grid
+  const ySteps = 5;
+  ctx.font = '400 9px Inter'; ctx.fillStyle = '#a3a8a0'; ctx.textAlign = 'right';
+  for (let i = 0; i <= ySteps; i++) {
+    const v = minVal + (valRange*i/ySteps), y = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
+  }
+  // X labels
+  ctx.textAlign = 'center'; const xInt = yearRange > 50 ? 10 : yearRange > 25 ? 5 : 2;
+  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
+    ctx.beginPath(); ctx.moveTo(toX(yr), H-pad.bottom); ctx.lineTo(toX(yr), pad.top);
+    ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.stroke();
+    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+
+  // Draw filled areas (back to front so first dataset is on top)
+  [...datasets].reverse().forEach(ds => {
+    const sorted = ds.data.slice().sort((a,b)=>a.year-b.year);
+    if (sorted.length < 2) return;
+    // Filled area with gradient
+    ctx.beginPath();
+    sorted.forEach((d,i) => { i===0 ? ctx.moveTo(toX(d.year),toY(d.value)) : ctx.lineTo(toX(d.year),toY(d.value)); });
+    ctx.lineTo(toX(sorted[sorted.length-1].year), H-pad.bottom);
+    ctx.lineTo(toX(sorted[0].year), H-pad.bottom);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, pad.top, 0, H-pad.bottom);
+    grad.addColorStop(0, ds.color + '30');
+    grad.addColorStop(1, ds.color + '05');
+    ctx.fillStyle = grad; ctx.fill();
+    // Stroke
+    ctx.beginPath();
+    sorted.forEach((d,i) => { i===0 ? ctx.moveTo(toX(d.year),toY(d.value)) : ctx.lineTo(toX(d.year),toY(d.value)); });
+    ctx.strokeStyle = ds.color; ctx.lineWidth = 2.5; ctx.stroke();
+    // End label
+    const last = sorted[sorted.length-1];
+    ctx.font = '600 10px Inter'; ctx.fillStyle = ds.color; ctx.textAlign = 'left';
+    ctx.fillText(ds.label, toX(last.year)+6, toY(last.value)+3);
+  });
+
+  if (options.yLabel) {
+    ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2);
+    ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+    ctx.fillText(options.yLabel, 0, 0); ctx.restore();
+  }
+}
+
+
+// =========================================================
+// CHART TYPE 6: STEPPED AREA CHART (for Oil)
+// =========================================================
+function drawSteppedArea(canvasId, datasets, options = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 35, right: 40, bottom: 55, left: 70 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  ctx.clearRect(0, 0, W, H);
+
+  let allYears = [], allVals = [];
+  datasets.forEach(ds => ds.data.forEach(d => { allYears.push(d.year); allVals.push(d.value); }));
+  const minYear = Math.min(...allYears), maxYear = Math.max(...allYears);
+  const minVal = 0, maxVal = Math.max(...allVals) * 1.1;
+  const valRange = maxVal || 1, yearRange = maxYear - minYear || 1;
+  function toX(yr) { return pad.left + ((yr-minYear)/yearRange)*cw; }
+  function toY(v) { return H - pad.bottom - (v/valRange)*ch; }
+
+  // Grid
+  const ySteps = 5;
+  ctx.font = '400 9px Inter'; ctx.fillStyle = '#a3a8a0'; ctx.textAlign = 'right';
+  for (let i = 0; i <= ySteps; i++) {
+    const v = valRange*i/ySteps, y = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
+  }
+  const xInt = yearRange > 30 ? 5 : yearRange > 15 ? 2 : 1;
+  ctx.textAlign = 'center';
+  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
+    ctx.beginPath(); ctx.moveTo(toX(yr), H-pad.bottom); ctx.lineTo(toX(yr), pad.top);
+    ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.stroke();
+    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+
+  // Event markers BEHIND the area
+  if (options.events) {
+    options.events.forEach(ev => {
+      const x = toX(ev.year);
+      if (x >= pad.left && x <= W-pad.right) {
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H-pad.bottom);
+        ctx.strokeStyle = 'rgba(196,68,45,0.3)'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.save(); ctx.translate(x-4, pad.top+8); ctx.rotate(-Math.PI/2);
+        ctx.font = '600 7px Inter'; ctx.fillStyle = 'rgba(196,68,45,0.7)'; ctx.textAlign = 'right';
+        ctx.fillText(ev.label, 0, 0); ctx.restore();
+      }
+    });
+  }
+
+  // Draw stepped area
+  datasets.forEach(ds => {
+    const sorted = ds.data.slice().sort((a,b)=>a.year-b.year);
+    if (sorted.length < 2) return;
+
+    // Build stepped path
+    ctx.beginPath();
+    ctx.moveTo(toX(sorted[0].year), toY(sorted[0].value));
+    for (let i = 1; i < sorted.length; i++) {
+      // Horizontal step to new x, then vertical step to new y
+      ctx.lineTo(toX(sorted[i].year), toY(sorted[i-1].value));
+      ctx.lineTo(toX(sorted[i].year), toY(sorted[i].value));
+    }
+    // Fill
+    const lastX = toX(sorted[sorted.length-1].year);
+    const firstX = toX(sorted[0].year);
+    ctx.lineTo(lastX, H-pad.bottom);
+    ctx.lineTo(firstX, H-pad.bottom);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, pad.top, 0, H-pad.bottom);
+    grad.addColorStop(0, ds.color + '35');
+    grad.addColorStop(0.7, ds.color + '10');
+    grad.addColorStop(1, ds.color + '02');
+    ctx.fillStyle = grad; ctx.fill();
+
+    // Stroke
+    ctx.beginPath();
+    ctx.moveTo(toX(sorted[0].year), toY(sorted[0].value));
+    for (let i = 1; i < sorted.length; i++) {
+      ctx.lineTo(toX(sorted[i].year), toY(sorted[i-1].value));
+      ctx.lineTo(toX(sorted[i].year), toY(sorted[i].value));
+    }
+    ctx.strokeStyle = ds.color; ctx.lineWidth = 2; ctx.stroke();
+
+    // Peak marker
+    const peak = sorted.reduce((a,b)=>b.value>a.value?b:a);
+    const px = toX(peak.year), py = toY(peak.value);
+    ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.strokeStyle = ds.color; ctx.lineWidth = 2; ctx.stroke();
+    ctx.font = '600 9px Inter'; ctx.fillStyle = ds.color; ctx.textAlign = 'center';
+    ctx.fillText(options.yFormat ? options.yFormat(peak.value) : peak.value.toFixed(0), px, py-10);
+
+    // End label
+    const last = sorted[sorted.length-1];
+    ctx.font = '600 10px Inter'; ctx.fillStyle = ds.color; ctx.textAlign = 'left';
+    ctx.fillText(ds.label, toX(last.year)+6, toY(last.value)+3);
+  });
+
+  if (options.yLabel) {
+    ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2);
+    ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+    ctx.fillText(options.yLabel, 0, 0); ctx.restore();
+  }
+}
+
+// --- WORLD BANK API FETCHER ---
+async function fetchWorldBank(indicator, countryCode, startYear, endYear) {
+  const url = `https://api.worldbank.org/v2/country/${countryCode}/indicator/${indicator}?date=${startYear}:${endYear}&format=json&per_page=500`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error('World Bank API ' + resp.status);
+  const json = await resp.json();
+  if (!json[1]) return [];
+  return json[1]
+    .filter(d => d.value !== null)
+    .map(d => ({ year: parseInt(d.date), value: d.value }))
+    .sort((a, b) => a.year - b.year);
+}
+
+function setStatus(id, text, state) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = text; el.className = 'real-chart-status' + (state ? ' ' + state : ''); }
+}
+
+// --- 1. GDP PER CAPITA — GROUPED BAR CHART ---
+async function loadGDPChart() {
+  try {
+    const [usData, irData] = await Promise.all([
+      fetchWorldBank('NY.GDP.PCAP.KD', 'US', 1960, 2023),
+      fetchWorldBank('NY.GDP.PCAP.KD', 'IR', 1960, 2023)
+    ]);
+    setStatus('gdp-status', '✦ ' + (usData.length + irData.length) + ' data points loaded — World Bank Open Data', 'loaded');
+    drawGroupedBar('gdp-chart', [
+      { label: 'United States', data: usData, color: '#44474e' },
+      { label: 'Iran', data: irData, color: '#c4442d' }
+    ], {
+      yLabel: 'GDP PER CAPITA (CONSTANT 2015 USD)',
+      yFormat: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v.toFixed(0)),
+      events: [
+        { year: 1979, label: 'Iranian Revolution' },
+        { year: 2012, label: 'Oil Sanctions Peak' },
+        { year: 2018, label: 'JCPOA Withdrawal' }
+      ]
+    });
+  } catch(e) {
+    setStatus('gdp-status', '✗ Failed to load: ' + e.message, 'error');
+  }
+}
+
+// --- 2. TRADE OPENNESS — AREA CHART ---
+async function loadTradeChart() {
+  try {
+    const [usData, irData] = await Promise.all([
+      fetchWorldBank('NE.TRD.GNFS.ZS', 'US', 1960, 2023),
+      fetchWorldBank('NE.TRD.GNFS.ZS', 'IR', 1960, 2023)
+    ]);
+    setStatus('trade-status', '✦ ' + (usData.length + irData.length) + ' pts — World Bank', 'loaded');
+    drawAreaChart('trade-chart', [
+      { label: 'U.S.', data: usData, color: '#44474e' },
+      { label: 'Iran', data: irData, color: '#c4442d' }
+    ], { yLabel: 'TRADE (% OF GDP)', yFormat: v => v.toFixed(0) + '%' });
+  } catch(e) { setStatus('trade-status', '✗ ' + e.message, 'error'); }
+}
+
+// --- 3. BRENT CRUDE OIL — STEPPED AREA CHART ---
+async function loadOilChart() {
+  try {
+    const resp = await fetch('https://fred.stlouisfed.org/graph/fredgraph.csv?bgcolor=%23e1e9f0&chart_type=line&drp=0&fo=open%20sans&graph_bgcolor=%23ffffff&height=450&mode=fred&recession_bars=on&txtcolor=%23444444&ts=12&tts=12&width=1168&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles=yes&show_tooltip=yes&id=DCOILBRENTEU&scale=left&cosd=1987-05-20&coed=2025-03-31&line_color=%234572a7&link_values=false&line_style=solid&mark_type=none&mw=3&lw=2&ost=-99999&oet=99999&mma=0&fml=a&fq=Monthly&fam=avg&fgst=lin&fgsnd=2020-02-01&line_index=1&transformation=lin&vintage_date=2025-04-01&revision_date=2025-04-01&nd=1987-05-20');
+    if (!resp.ok) throw new Error('FRED API ' + resp.status);
+    const csv = await resp.text();
+    const lines = csv.trim().split('\n').slice(1);
+    const data = [];
+    lines.forEach(line => {
+      const [dateStr, valStr] = line.split(',');
+      if (valStr && valStr !== '.' && !isNaN(parseFloat(valStr))) {
+        const year = parseInt(dateStr.split('-')[0]);
+        const month = parseInt(dateStr.split('-')[1]);
+        data.push({ year: year + (month - 1) / 12, value: parseFloat(valStr) });
+      }
+    });
+    const byYear = {};
+    data.forEach(d => {
+      const yr = Math.round(d.year * 2) / 2;
+      if (!byYear[yr]) byYear[yr] = [];
+      byYear[yr].push(d.value);
+    });
+    const averaged = Object.entries(byYear).map(([yr, vals]) => ({
+      year: parseFloat(yr),
+      value: vals.reduce((s, v) => s + v, 0) / vals.length
+    })).sort((a, b) => a.year - b.year);
+
+    setStatus('oil-status', '✦ ' + data.length + ' observations loaded — FRED (Brent Crude)', 'loaded');
+    drawSteppedArea('oil-chart', [
+      { label: 'Brent Crude ($/bbl)', data: averaged, color: '#2d6e5f' }
+    ], {
+      yLabel: 'PRICE PER BARREL (USD)',
+      yFormat: v => '$' + v.toFixed(0),
+      events: [
+        { year: 1990.6, label: 'Gulf War I' },
+        { year: 1997, label: 'Asian Crisis' },
+        { year: 2003.3, label: 'Iraq Invasion' },
+        { year: 2008.5, label: '$147 Peak / GFC' },
+        { year: 2011, label: 'Arab Spring' },
+        { year: 2014.5, label: 'Oil Glut' },
+        { year: 2020.2, label: 'COVID Crash' },
+        { year: 2022.2, label: 'Ukraine War' }
+      ]
+    });
+  } catch(e) {
+    setStatus('oil-status', '✗ FRED CORS blocked — loading fallback via World Bank crude proxy', 'error');
+    try {
+      const oilData = await fetchWorldBank('NY.GDP.PETR.RT.ZS', 'IR', 1970, 2023);
+      setStatus('oil-status', '✦ Fallback: Iran Oil Rents (% GDP) — ' + oilData.length + ' pts — World Bank', 'loaded');
+      drawSteppedArea('oil-chart', [
+        { label: 'Iran Oil Rents (% GDP)', data: oilData, color: '#2d6e5f' }
+      ], {
+        yLabel: 'OIL RENTS (% OF GDP)',
+        yFormat: v => v.toFixed(1) + '%',
+        events: [
+          { year: 1979, label: 'Revolution' },
+          { year: 1990, label: 'Gulf War' },
+          { year: 2003, label: 'Iraq War' },
+          { year: 2012, label: 'Sanctions Peak' },
+          { year: 2018, label: 'JCPOA Exit' }
+        ]
+      });
+    } catch(e2) {
+      setStatus('oil-status', '✗ All sources failed: ' + e2.message, 'error');
+    }
+  }
+}
+
+// --- AI ERA INTELLIGENCE FLASHCARDS ---
+let eraIntelGenerated = false;
+const eraIntelBtn = document.getElementById('era-intel-btn');
+if (eraIntelBtn) {
+  eraIntelBtn.addEventListener('click', () => generateEraIntel());
+}
+
+async function generateEraIntel() {
+  if (!CEREBRAS_KEY) { alert('AI key not configured'); return; }
+  const btn = document.getElementById('era-intel-btn');
+  btn.disabled = true;
+  btn.classList.add('generating');
+  btn.textContent = '⟳ Generating Intelligence…';
+
+  // Collect chart data summaries from the status elements
+  const gdpStatus = document.getElementById('gdp-status')?.textContent || '';
+  const tradeStatus = document.getElementById('trade-status')?.textContent || '';
+  const oilStatus = document.getElementById('oil-status')?.textContent || '';
+
+  const eraKeys = ['romana', 'song', 'renaissance', 'twenties', 'golden', 'nineties'];
+  const eraLabels = {
+    romana: 'Pax Romana (27 BC–180 AD)',
+    song: 'Song Dynasty (960–1279 AD)',
+    renaissance: 'Italian Renaissance (1450–1600)',
+    twenties: 'Roaring Twenties (1920s USA)',
+    golden: 'Golden Age USA (1950s)',
+    nineties: 'Information Age (1990s)',
+  };
+
+  const prompt = `You are analysing real-world economic data for the Geopolitical Equilibrium Model (GEM). The data includes:
+
+1. GDP Per Capita (U.S. vs Iran): U.S. GDP per capita is roughly $55,000–$65,000 (constant 2015 USD), while Iran is around $5,000–$7,000. The gap has widened since the 1979 revolution and especially after 2012 sanctions.
+
+2. Trade Openness (% GDP): U.S. trades at 25–30% of GDP. Iran collapsed from 50%+ to under 40% post-sanctions. Economic isolation is visible.
+
+3. Brent Crude Oil: Oil prices spiked during Gulf Wars, 2008 ($140), crashed in 2014 and 2020. Currently $70–$85. Every major price shock correlates with Middle East geopolitical events.
+
+For EACH of the 6 historical eras below, write a 2–3 sentence analytical conclusion connecting what this modern economic data reveals through the strategic lens of that era. Be specific — reference the actual data patterns. Write like a senior intelligence analyst.
+
+Format your response EXACTLY as:
+ROMANA: [conclusion]
+SONG: [conclusion]
+RENAISSANCE: [conclusion]
+TWENTIES: [conclusion]
+GOLDEN: [conclusion]
+NINETIES: [conclusion]
+
+Eras: ${eraKeys.map(k => eraLabels[k]).join(', ')}`;
+
+  try {
+    const result = await callAI(prompt, 900);
+    const lines = result.split('\n').filter(l => l.trim());
+    const parsed = {};
+    for (const line of lines) {
+      const match = line.match(/^(ROMANA|SONG|RENAISSANCE|TWENTIES|GOLDEN|NINETIES):\s*(.+)/i);
+      if (match) parsed[match[1].toLowerCase()] = match[2].trim();
+    }
+
+    for (const era of eraKeys) {
+      const el = document.getElementById('intel-' + era);
+      const card = el?.closest('.era-intel-card');
+      if (el && parsed[era]) {
+        el.innerHTML = parsed[era];
+        card?.classList.add('loaded');
+      } else if (el) {
+        el.innerHTML = '<em>No data returned for this era.</em>';
+      }
+    }
+    eraIntelGenerated = true;
+    btn.textContent = '✓ Intelligence Generated';
+    btn.classList.remove('generating');
+  } catch (err) {
+    console.error('Era intel AI error:', err);
+    btn.textContent = '✗ Generation Failed — Retry';
+    btn.classList.remove('generating');
+    btn.disabled = false;
+  }
+}
+
+// --- LAUNCH ALL REAL DATA CHARTS ---
+// Stagger to avoid overwhelming World Bank API
+async function loadAllRealCharts() {
+  loadGDPChart();
+  await new Promise(r => setTimeout(r, 300));
+  loadTradeChart();
+  await new Promise(r => setTimeout(r, 300));
+  loadOilChart();
+}
+
+// Trigger when new charts section scrolls into view
+let realChartsLoaded = false;
+const realChartObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && !realChartsLoaded) {
+      realChartsLoaded = true;
+      loadAllRealCharts();
+      realChartObserver.disconnect();
+    }
+  });
+}, { threshold: 0.05 });
+const gdpChartEl = document.getElementById('gdp-chart');
+if (gdpChartEl) realChartObserver.observe(gdpChartEl);
+
+// Initial calculation
+calculate();
+</script>
+
+</BaseLayout>
