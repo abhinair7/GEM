@@ -4,6 +4,6 @@ import vercel from '@astrojs/vercel/serverless';
 export default defineConfig({
   integrations: [],
   output: 'hybrid',
-  adapter: vercel(),
+  adapter: vercel({ maxDuration: 30 }),
   devToolbar: { enabled: false },
 });

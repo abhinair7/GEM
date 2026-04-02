@@ -2,9 +2,12 @@
   "name": "gem-website",
   "type": "module",
   "version": "1.0.0",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/patch-runtime.mjs",
     "preview": "astro preview",
     "refresh-data": "node scripts/refresh-data.mjs"
   },
