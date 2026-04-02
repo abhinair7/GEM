@@ -2,21 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { bgArtifactImages, eraCards, historicalData } from '../data/eras';
 import '../styles/global.css';
-import fredData from '../data/fred.json';
+
+export const prerender = true; // This page is static (hybrid mode)
 
 const CEREBRAS_API_KEY = import.meta.env.PUBLIC_CEREBRAS_API_KEY || '';
 const GNEWS_API_KEY = import.meta.env.PUBLIC_GNEWS_API_KEY || '';
-
-// ── STATIC FRED DATA (pre-fetched locally, Vercel-safe) ──
-// To refresh: npm run refresh-data
-const FRED_DOLLAR = fredData.dollar || [];
-const FRED_GOLD = fredData.gold || [];
-const FRED_OIL = fredData.oil || [];
-const FRED_TREASURY = fredData.treasury || [];
-const FRED_VIX = fredData.vix || [];
-const FRED_FOREX = fredData.forex || [];
-
-console.log(`[BUILD] FRED static data: Dollar=${FRED_DOLLAR.length}, Gold=${FRED_GOLD.length}, Oil=${FRED_OIL.length}, Treasury=${FRED_TREASURY.length}, VIX=${FRED_VIX.length}, Forex=${FRED_FOREX.length}`);
 
 // ── BUILD-TIME NEWS FETCH (GNews blocks browser CORS) ──
 let GNEWS_ARTICLES: any[] = [];
@@ -367,7 +357,7 @@ const eraArtifacts: Record<string, string> = {
   <div class="analysis-header" style="margin-top:1.5rem;">
     <div class="section-overline reveal">Live Empirical Data</div>
     <h2 class="reveal">Real-World Economic Intelligence</h2>
-    <p class="reveal">Six live datasets fetched at build-time from the Federal Reserve Economic Data (FRED) API. ~400 monthly observations rendered across six financial indicators — zero hardcoded values, all sourced from the Federal Reserve.</p>
+    <p class="reveal">Six live datasets fetched in real-time from the Federal Reserve Economic Data (FRED) API via serverless proxy. ~400 monthly observations rendered across six financial indicators — zero hardcoded values, all sourced live from the Federal Reserve.</p>
   </div>
 
   <div class="analysis-grid">
@@ -462,7 +452,7 @@ const eraArtifacts: Record<string, string> = {
 <!-- =========================================================
      ENGINE SCRIPT — All simulation logic, charts, GDELT feed
      ========================================================= -->
-<script is:inline define:vars={{ CEREBRAS_API_KEY, GNEWS_ARTICLES, FRED_DOLLAR, FRED_GOLD, FRED_OIL, FRED_TREASURY, FRED_VIX, FRED_FOREX }}>
+<script is:inline define:vars={{ CEREBRAS_API_KEY, GNEWS_ARTICLES }}>
 // CORE DATA (inline for client-side performance)
 const eraProfiles = {
   romana: { trade: 0.82, politics: 0.90, security: 0.88, benefit: 0.25 },
@@ -1859,7 +1849,6 @@ function drawSpreadChart(canvasId, data, options) {
 // =========================================================
 var _isMobile = window.innerWidth <= 768;
 function thinData(arr, n) {
-  // Keep every Nth point, but always keep first and last
   if (!arr || arr.length <= n) return arr;
   var step = Math.ceil(arr.length / n);
   var result = [];
@@ -1869,7 +1858,6 @@ function thinData(arr, n) {
 }
 function mobileEvents(events, max) {
   if (!_isMobile || !events) return events;
-  // Keep only `max` most spaced-out events
   if (events.length <= max) return events;
   var step = Math.floor(events.length / max);
   var result = [];
@@ -1877,12 +1865,16 @@ function mobileEvents(events, max) {
   return result;
 }
 
-// --- 1. U.S. DOLLAR INDEX — AREA CHART ---
-function loadDollarChart() {
-  var data = _isMobile ? thinData(FRED_DOLLAR, 30) : FRED_DOLLAR;
+// =========================================================
+// LIVE FRED DATA — fetched from /api/fred serverless function
+// =========================================================
+var FRED_DOLLAR = [], FRED_GOLD = [], FRED_OIL = [], FRED_TREASURY = [], FRED_VIX = [], FRED_FOREX = [];
+
+function loadDollarChart(src, srcLabel) {
+  var data = _isMobile ? thinData(src, 30) : src;
   if (!data || !data.length) { setStatus('dollar-status', '✗ No dollar data available', 'error'); return; }
-  _chartData.dollar = data;
-  setStatus('dollar-status', '✦ ' + FRED_DOLLAR.length + ' observations — FRED Trade-Weighted Dollar Index (build-time fetch)', 'loaded');
+  FRED_DOLLAR = src; _chartData.dollar = data;
+  setStatus('dollar-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Trade-Weighted Dollar Index', 'loaded');
   drawAreaChart('dollar-chart', [
     { label: 'USD Index', data: data, color: '#44474e' }
   ], {
@@ -1897,12 +1889,11 @@ function loadDollarChart() {
   });
 }
 
-// --- 2. GOLD PRICE — AREA CHART ---
-function loadGoldChart() {
-  var data = _isMobile ? thinData(FRED_GOLD, 30) : FRED_GOLD;
+function loadGoldChart(src, srcLabel) {
+  var data = _isMobile ? thinData(src, 30) : src;
   if (!data || !data.length) { setStatus('gold-status', '✗ No gold data available', 'error'); return; }
-  _chartData.gold = data;
-  setStatus('gold-status', '✦ ' + FRED_GOLD.length + ' observations — FRED Gold Mining PPI (build-time fetch)', 'loaded');
+  FRED_GOLD = src; _chartData.gold = data;
+  setStatus('gold-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Gold Mining PPI', 'loaded');
   drawBarChart('gold-chart', [
     { label: 'Gold PPI', data: data, color: '#8b6914' }
   ], {
@@ -1917,12 +1908,11 @@ function loadGoldChart() {
   });
 }
 
-// --- 3. BRENT CRUDE OIL — STEPPED AREA CHART ---
-function loadOilChart() {
-  var data = _isMobile ? thinData(FRED_OIL, 30) : FRED_OIL;
+function loadOilChart(src, srcLabel) {
+  var data = _isMobile ? thinData(src, 30) : src;
   if (!data || !data.length) { setStatus('oil-status', '✗ No oil data available', 'error'); return; }
-  _chartData.oil = data;
-  setStatus('oil-status', '✦ ' + FRED_OIL.length + ' observations — FRED Brent Crude Oil (build-time fetch)', 'loaded');
+  FRED_OIL = src; _chartData.oil = data;
+  setStatus('oil-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Brent Crude Oil', 'loaded');
   drawSteppedArea('oil-chart', [
     { label: 'Brent Crude ($/bbl)', data: data, color: '#2d6e5f' }
   ], {
@@ -1930,7 +1920,6 @@ function loadOilChart() {
     yFormat: function(v) { return '$' + v.toFixed(0); },
     events: mobileEvents([
       { year: 2020.3, label: 'COVID Crash' },
-      { year: 2021.5, label: 'Recovery Rally' },
       { year: 2022.15, label: 'Ukraine War Spike' },
       { year: 2023.5, label: 'OPEC+ Cuts' },
       { year: 2024.8, label: 'Red Sea Disruption' }
@@ -1938,12 +1927,11 @@ function loadOilChart() {
   });
 }
 
-// --- 4. TREASURY YIELD SPREAD — ZERO-CROSSING CHART ---
-function loadTreasuryChart() {
-  var data = _isMobile ? thinData(FRED_TREASURY, 30) : FRED_TREASURY;
+function loadTreasuryChart(src, srcLabel) {
+  var data = _isMobile ? thinData(src, 30) : src;
   if (!data || !data.length) { setStatus('treasury-status', '✗ No treasury data available', 'error'); return; }
-  _chartData.treasury = data;
-  setStatus('treasury-status', '✦ ' + FRED_TREASURY.length + ' observations — FRED 10Y-2Y Treasury Spread (build-time fetch)', 'loaded');
+  FRED_TREASURY = src; _chartData.treasury = data;
+  setStatus('treasury-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED 10Y-2Y Treasury Spread', 'loaded');
   drawSpreadChart('treasury-chart', data, {
     events: mobileEvents([
       { year: 2022.3, label: 'Curve Inverts' },
@@ -1953,12 +1941,11 @@ function loadTreasuryChart() {
   });
 }
 
-// --- 5. VIX VOLATILITY INDEX — AREA CHART ---
-function loadVIXChart() {
-  var data = _isMobile ? thinData(FRED_VIX, 30) : FRED_VIX;
+function loadVIXChart(src, srcLabel) {
+  var data = _isMobile ? thinData(src, 30) : src;
   if (!data || !data.length) { setStatus('vix-status', '✗ No VIX data available', 'error'); return; }
-  _chartData.vix = data;
-  setStatus('vix-status', '✦ ' + FRED_VIX.length + ' observations — FRED CBOE Volatility Index (build-time fetch)', 'loaded');
+  FRED_VIX = src; _chartData.vix = data;
+  setStatus('vix-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED CBOE Volatility Index', 'loaded');
   drawLollipopChart('vix-chart', [
     { label: 'VIX', data: data, color: '#c4442d' }
   ], {
@@ -1974,12 +1961,11 @@ function loadVIXChart() {
   });
 }
 
-// --- 6. USD/EUR FOREX — FRED (DEXUSEU) ---
-function loadForexChart() {
-  var data = _isMobile ? thinData(FRED_FOREX, 30) : FRED_FOREX;
+function loadForexChart(src, srcLabel) {
+  var data = _isMobile ? thinData(src, 30) : src;
   if (!data || !data.length) { setStatus('forex-status', '✗ No forex data available', 'error'); return; }
-  _chartData.forex = data;
-  setStatus('forex-status', '✦ ' + FRED_FOREX.length + ' observations — FRED USD/EUR Exchange Rate (build-time fetch)', 'loaded');
+  FRED_FOREX = src; _chartData.forex = data;
+  setStatus('forex-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED USD/EUR Exchange Rate', 'loaded');
   drawDotPlot('forex-chart', [
     { label: 'USD/EUR', data: data, color: '#5c4d8b' }
   ], {
@@ -2150,18 +2136,46 @@ function fitCanvasToContainer(canvas) {
 }
 document.querySelectorAll('canvas').forEach(fitCanvasToContainer);
 
-// --- LAUNCH ALL REAL DATA CHARTS ---
-// Data was pre-fetched at build time (server-side) — no CORS issues, instant render
+// --- LAUNCH ALL REAL DATA CHARTS (live fetch from serverless API) ---
+var SERIES_MAP = {
+  DTWEXBGS:      function(d, s) { loadDollarChart(d, s); },
+  PCU21222122:   function(d, s) { loadGoldChart(d, s); },
+  DCOILBRENTEU:  function(d, s) { loadOilChart(d, s); },
+  T10Y2Y:        function(d, s) { loadTreasuryChart(d, s); },
+  VIXCLS:        function(d, s) { loadVIXChart(d, s); },
+  DEXUSEU:       function(d, s) { loadForexChart(d, s); }
+};
+
 function loadAllRealCharts() {
-  loadDollarChart();
-  loadGoldChart();
-  loadOilChart();
-  loadTreasuryChart();
-  loadVIXChart();
-  loadForexChart();
+  var ids = Object.keys(SERIES_MAP).join(',');
+  ['dollar','gold','oil','treasury','vix','forex'].forEach(function(k, i) {
+    var statusId = ['dollar','gold','oil','treasury','vix','forex'][i] + '-status';
+    setStatus(statusId, '⟳ Fetching live FRED data…', '');
+  });
+  fetch('/api/fred?series=' + ids)
+    .then(function(r) { return r.json(); })
+    .then(function(json) {
+      var src = json.fallback ? 'cached' : 'live';
+      if (json.data) {
+        Object.keys(SERIES_MAP).forEach(function(id) {
+          if (json.data[id] && json.data[id].length) {
+            SERIES_MAP[id](json.data[id], src);
+          }
+        });
+      }
+      if (json.errors && json.errors.length) {
+        console.warn('[FRED] Some series had errors:', json.errors);
+      }
+    })
+    .catch(function(err) {
+      console.error('[FRED] Live fetch failed:', err);
+      ['dollar','gold','oil','treasury','vix','forex'].forEach(function(k) {
+        setStatus(k + '-status', '✗ Live data unavailable — check connection', 'error');
+      });
+    });
 }
 
-// Load real charts immediately — data was pre-fetched at build time
+// Fetch live data immediately
 try { loadAllRealCharts(); } catch(e) { console.error('Chart load error:', e); }
 
 // Initial calculation
