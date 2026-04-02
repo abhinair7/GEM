@@ -150,45 +150,50 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
   animation: scrollPulse 2s infinite;
 }
 
-/* ========== SPLASH — 3D ORBIT RING (mobile only) ========== */
+/* ========== SPLASH — 3D TITLE (mobile only) ========== */
 .splash-orbit {
   display: none;
   position: absolute;
   bottom: 14vh;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 280px;
-  height: 80px;
+  left: 0;
+  right: 0;
   z-index: 4;
-  perspective: 800px;
+  text-align: center;
+  padding: 0 24px;
 }
-.splash-orbit-ring {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  animation: orbitSpin 18s linear infinite;
-}
-.splash-orbit-word {
-  position: absolute;
-  top: 50%;
-  left: 50%;
+.splash-orbit-title {
+  display: block;
   font-family: 'Newsreader', serif;
   font-weight: 300;
   font-style: italic;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  backface-visibility: hidden;
-  text-shadow: 0 2px 20px rgba(0,0,0,0.6);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
-.splash-orbit-word.gold {
+.splash-orbit-line1 {
+  display: block;
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  color: #fff;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.15),
+    0 2px 0 rgba(180,150,80,0.25),
+    0 3px 0 rgba(160,130,60,0.2),
+    0 4px 0 rgba(140,110,50,0.15),
+    0 5px 0 rgba(120,95,40,0.1),
+    0 6px 12px rgba(0,0,0,0.4),
+    0 10px 30px rgba(0,0,0,0.25);
+}
+.splash-orbit-line2 {
+  display: block;
+  font-size: clamp(1.6rem, 7vw, 2.6rem);
   color: rgba(197,160,89,0.9);
-}
-.splash-orbit-word.white {
-  color: rgba(255,255,255,0.85);
-}
-@keyframes orbitSpin {
-  0%   { transform: rotateY(0deg); }
-  100% { transform: rotateY(360deg); }
+  text-shadow:
+    0 1px 0 rgba(197,160,89,0.3),
+    0 2px 0 rgba(170,140,70,0.25),
+    0 3px 0 rgba(150,120,55,0.2),
+    0 4px 0 rgba(130,105,45,0.15),
+    0 5px 0 rgba(110,90,35,0.1),
+    0 6px 12px rgba(0,0,0,0.4),
+    0 10px 30px rgba(0,0,0,0.25);
 }
 
 /* ========== SECTIONS ========== */

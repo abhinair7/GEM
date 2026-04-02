@@ -166,9 +166,12 @@ const eraArtifacts: Record<string, string> = {
     <h1 class="splash-title">The Architects<br>of Prosperity</h1>
     <div class="splash-scroll-cue"><div class="splash-scroll-line"></div> Scroll to enter</div>
   </div>
-  <!-- 3D orbit ring — visible on mobile only -->
-  <div class="splash-orbit" aria-hidden="true">
-    <div class="splash-orbit-ring" id="splash-orbit-ring"></div>
+  <!-- 3D title — visible on mobile only -->
+  <div class="splash-orbit">
+    <span class="splash-orbit-title">
+      <span class="splash-orbit-line1">The Architects</span>
+      <span class="splash-orbit-line2">of Prosperity</span>
+    </span>
   </div>
 </div>
 
@@ -630,27 +633,7 @@ if (splash) {
     .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.10, ease: 'none' }, 0.68);
 }
 
-// 3D orbit ring — "The Architects of Prosperity" circling in 3D (mobile)
-(function() {
-  var ring = document.getElementById('splash-orbit-ring');
-  if (!ring) return;
-  var words = [
-    { text: 'The',         size: '1.1rem',  cls: 'white' },
-    { text: 'Architects',  size: '1.45rem', cls: 'gold'  },
-    { text: 'of',          size: '1rem',    cls: 'white' },
-    { text: 'Prosperity',  size: '1.45rem', cls: 'gold'  }
-  ];
-  var radius = 130;
-  words.forEach(function(w, i) {
-    var angle = (i / words.length) * 360;
-    var span = document.createElement('span');
-    span.className = 'splash-orbit-word ' + w.cls;
-    span.textContent = w.text;
-    span.style.fontSize = w.size;
-    span.style.transform = 'translate(-50%,-50%) rotateY(' + angle + 'deg) translateZ(' + radius + 'px)';
-    ring.appendChild(span);
-  });
-})();
+// (3D title is pure HTML+CSS, no JS needed)
 
 document.querySelectorAll('.reveal').forEach(el => {
   gsap.to(el, { scrollTrigger: { trigger: el, start: 'top 85%' }, opacity:1, y:0, duration:0.8, ease:'power3.out' });
