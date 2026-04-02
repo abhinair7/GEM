@@ -4,6 +4,10 @@
  * Fetches live data from the Federal Reserve Economic Data (FRED) API
  * server-side, avoiding CORS and build-IP blocks. Returns clean JSON.
  * 
+ * Supports two data sources (auto-detected):
+ *   1. Official FRED API (if FRED_API_KEY env var is set)
+ *   2. FRED CSV endpoint (public, no key needed — less reliable from cloud IPs)
+ * 
  * Usage: GET /api/fred?series=DTWEXBGS,PCU21222122,DCOILBRENTEU,T10Y2Y,VIXCLS,DEXUSEU
  * 
  * Each series returns: [{ year: 2024.083, value: 123.45, date: "2024-02-01" }, ...]
@@ -13,6 +17,8 @@ import type { APIRoute } from 'astro';
 import fredFallback from '../../data/fred.json';
 
 export const prerender = false; // Run as serverless function, not static
+
+const FRED_API_KEY = import.meta.env.FRED_API_KEY || '';
 
 const ALLOWED_SERIES = new Set([
   'DTWEXBGS',      // Dollar index
@@ -32,12 +38,14 @@ const SERIES_TO_FALLBACK: Record<string, string> = {
   DEXUSEU: 'forex',
 };
 
-function parseFredCsv(csv: string): Array<{ year: number; value: number; date: string }> {
+type DataPoint = { year: number; value: number; date: string };
+
+function parseFredCsv(csv: string): DataPoint[] {
   return csv
     .trim()
     .split('\n')
     .slice(1) // skip header
-    .reduce((arr: Array<{ year: number; value: number; date: string }>, line: string) => {
+    .reduce((arr: DataPoint[], line: string) => {
       const [dateStr, valStr] = line.split(',');
       if (valStr && valStr !== '.' && !isNaN(parseFloat(valStr))) {
         const [y, m, d] = dateStr.split('-').map(Number);
@@ -53,16 +61,57 @@ function parseFredCsv(csv: string): Array<{ year: number; value: number; date: s
     .sort((a, b) => a.year - b.year);
 }
 
-async function fetchSeries(id: string): Promise<Array<{ year: number; value: number; date: string }>> {
-  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=2020-01-01&coed=2026-12-31`;
+function parseFredApiJson(json: any): DataPoint[] {
+  if (!json?.observations) return [];
+  return json.observations
+    .filter((obs: any) => obs.value !== '.' && !isNaN(parseFloat(obs.value)))
+    .map((obs: any) => {
+      const [y, m, d] = obs.date.split('-').map(Number);
+      const dim = new Date(y, m, 0).getDate();
+      return {
+        year: +(y + (m - 1 + (d - 1) / dim) / 12).toFixed(6),
+        value: parseFloat(obs.value),
+        date: obs.date,
+      };
+    })
+    .sort((a: DataPoint, b: DataPoint) => a.year - b.year);
+}
+
+/** Small delay helper for sequential fetching */
+function delay(ms: number) { return new Promise(r => setTimeout(r, ms)); }
+
+/** Get today's date as YYYY-MM-DD */
+function today(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+async function fetchViaApi(id: string): Promise<DataPoint[]> {
+  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_API_KEY}&file_type=json&observation_start=2020-01-01&observation_end=${today()}`;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000); // 8s timeout
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const resp = await fetch(url, { signal: controller.signal });
+    if (!resp.ok) throw new Error(`FRED API HTTP ${resp.status} for ${id}`);
+    const json = await resp.json();
+    return parseFredApiJson(json);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchViaCsv(id: string): Promise<DataPoint[]> {
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=2020-01-01&coed=${today()}`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000); // 15s timeout (was 8s)
   try {
     const resp = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
         'Accept': 'text/csv,text/plain,*/*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
       },
     });
     if (!resp.ok) throw new Error(`FRED HTTP ${resp.status} for ${id}`);
@@ -73,6 +122,18 @@ async function fetchSeries(id: string): Promise<Array<{ year: number; value: num
     return parseFredCsv(text);
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/** Fetch a single series with retry (1 retry after 2s delay) */
+async function fetchSeries(id: string): Promise<DataPoint[]> {
+  const fetcher = FRED_API_KEY ? fetchViaApi : fetchViaCsv;
+  try {
+    return await fetcher(id);
+  } catch (firstErr) {
+    // Retry once after a short delay
+    await delay(2000);
+    return await fetcher(id);
   }
 }
 
@@ -91,31 +152,35 @@ export const GET: APIRoute = async ({ request }) => {
   const result: Record<string, any> = {};
   const errors: string[] = [];
   let usedFallback = false;
+  const source = FRED_API_KEY ? 'api' : 'csv';
 
-  await Promise.all(
-    seriesIds.map(async (id) => {
-      try {
-        result[id] = await fetchSeries(id.trim());
-      } catch (e: any) {
-        // Use static fallback data when FRED is unreachable
-        const fallbackKey = SERIES_TO_FALLBACK[id];
-        const fallbackData = fallbackKey ? (fredFallback as any)[fallbackKey] : null;
-        if (fallbackData && fallbackData.length) {
-          result[id] = fallbackData;
-          usedFallback = true;
-        } else {
-          errors.push(`${id}: ${e.message}`);
-          result[id] = [];
-        }
+  // Fetch sequentially with small delay to avoid rate-limiting
+  for (const id of seriesIds) {
+    try {
+      result[id.trim()] = await fetchSeries(id.trim());
+    } catch (e: any) {
+      // Use static fallback data when FRED is unreachable
+      const fallbackKey = SERIES_TO_FALLBACK[id.trim()];
+      const fallbackData = fallbackKey ? (fredFallback as any)[fallbackKey] : null;
+      if (fallbackData && fallbackData.length) {
+        result[id.trim()] = fallbackData;
+        usedFallback = true;
+      } else {
+        errors.push(`${id}: ${e.message}`);
+        result[id.trim()] = [];
       }
-    })
-  );
+    }
+    // Small delay between requests to avoid FRED rate-limiting
+    if (seriesIds.indexOf(id) < seriesIds.length - 1) {
+      await delay(500);
+    }
+  }
 
-  return new Response(JSON.stringify({ data: result, errors, fallback: usedFallback }), {
+  return new Response(JSON.stringify({ data: result, errors, fallback: usedFallback, source }), {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200', // Cache 1h, stale OK for 2h
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
     },
   });
 };

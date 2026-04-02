@@ -7,9 +7,9 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && node scripts/patch-runtime.mjs",
+    "build": "node scripts/refresh-fred.mjs && astro build && node scripts/patch-runtime.mjs",
     "preview": "astro preview",
-    "refresh-data": "node scripts/refresh-data.mjs"
+    "refresh-fred": "node scripts/refresh-fred.mjs"
   },
   "dependencies": {
     "@astrojs/tailwind": "^5.1.0",
