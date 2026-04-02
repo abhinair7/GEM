@@ -206,10 +206,6 @@ const eraArtifacts: Record<string, string> = {
         <button class="apply-feed-btn" id="apply-to-sim">Apply to Simulation Engine</button>
       </div>
     </div>
-    <div class="ai-briefing-panel reveal" id="ai-briefing">
-      <div class="ai-briefing-header"><div class="ai-briefing-title"><span class="ai-dot"></span> AI Intelligence Briefing</div><div class="ai-badge" id="briefing-badge">Awaiting Feed Data</div></div>
-      <div class="ai-briefing-body" id="ai-briefing-body">Intelligence briefing will generate automatically once live feed data is loaded. The AI synthesises incoming events into a cohesive threat assessment with strategic implications.</div>
-    </div>
   </div>
 </section>
 
@@ -509,7 +505,6 @@ const eraColors = { romana: '#8b6914', song: '#2d6e5f', renaissance: '#c5a059', 
 // =========================================================
 const CEREBRAS_KEY = CEREBRAS_API_KEY || '';
 let aiDebounce = null;
-let briefingGenerated = false;
 
 // Global store for real chart data (fed into AI prompts dynamically)
 const _chartData = { dollar: null, gold: null, oil: null, treasury: null, vix: null, forex: null };
@@ -570,23 +565,6 @@ async function generateAIPlaybook(input, eraName, eraDate) {
   } catch(e) {
     console.log('AI Playbook error:', e.message);
     badge.textContent = 'Static Fallback'; badge.className = 'ai-badge';
-  }
-}
-
-// AI INTELLIGENCE BRIEFING — synthesises live feed headlines
-async function generateBriefing(headlines) {
-  if (briefingGenerated) return;
-  const badge = document.getElementById('briefing-badge');
-  badge.textContent = '⟳ Analysing…'; badge.className = 'ai-badge generating';
-  try {
-    const prompt = `You are monitoring the U.S.–Iran geopolitical theatre. Here are the latest headlines from the live intelligence feed:\n\n${headlines.map((h,i) => (i+1)+'. '+h).join('\n')}\n\nWrite a concise intelligence briefing (4-5 sentences) that:\n1. Identifies the dominant escalation/de-escalation vector\n2. Assesses the net impact on trade routes, political stability, security posture, and benefit distribution\n3. Flags the single highest-risk cascading scenario\n4. Recommends one immediate strategic response\n\nWrite in analytical prose, no bullet points.`;
-    const text = await callAI(prompt, 400);
-    document.getElementById('ai-briefing-body').innerHTML = text.replace(/\n\n/g, '<br><br>');
-    badge.textContent = '✦ AI Analysis Complete'; badge.className = 'ai-badge active';
-    briefingGenerated = true;
-  } catch(e) {
-    console.log('AI briefing error:', e.message);
-    badge.textContent = 'Analysis Failed'; badge.className = 'ai-badge';
   }
 }
 
@@ -767,8 +745,6 @@ function dripArticles(articles) {
   let idx = 0;
   function drip() {
     if (idx >= articles.length) {
-      // All articles loaded — trigger AI briefing
-      if (collectedHeadlines.length >= 3) queueAICall(() => generateBriefing(collectedHeadlines));
       return;
     }
     const art = articles[idx];
@@ -783,7 +759,6 @@ function dripArticles(articles) {
     addFeedItem(time, art.title, art.desc, impacts, true, art.url);
     idx++;
     if (idx < articles.length) setTimeout(drip, 2500);
-    else if (collectedHeadlines.length >= 3) queueAICall(() => generateBriefing(collectedHeadlines));
   }
   drip();
 }
