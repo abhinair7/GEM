@@ -1854,120 +1854,143 @@ function drawSpreadChart(canvasId, data, options) {
   ctx.fillText('10Y–2Y SPREAD (PERCENTAGE POINTS)', 0, 0); ctx.restore();
 }
 
+// =========================================================
+// MOBILE DATA THINNING — fewer points + fewer events on small screens
+// =========================================================
+var _isMobile = window.innerWidth <= 768;
+function thinData(arr, n) {
+  // Keep every Nth point, but always keep first and last
+  if (!arr || arr.length <= n) return arr;
+  var step = Math.ceil(arr.length / n);
+  var result = [];
+  for (var i = 0; i < arr.length; i += step) result.push(arr[i]);
+  if (result[result.length - 1] !== arr[arr.length - 1]) result.push(arr[arr.length - 1]);
+  return result;
+}
+function mobileEvents(events, max) {
+  if (!_isMobile || !events) return events;
+  // Keep only `max` most spaced-out events
+  if (events.length <= max) return events;
+  var step = Math.floor(events.length / max);
+  var result = [];
+  for (var i = 0; i < events.length; i += step) { result.push(events[i]); if (result.length >= max) break; }
+  return result;
+}
+
 // --- 1. U.S. DOLLAR INDEX — AREA CHART ---
 function loadDollarChart() {
-  var data = FRED_DOLLAR;
+  var data = _isMobile ? thinData(FRED_DOLLAR, 30) : FRED_DOLLAR;
   if (!data || !data.length) { setStatus('dollar-status', '✗ No dollar data available', 'error'); return; }
   _chartData.dollar = data;
-  setStatus('dollar-status', '✦ ' + data.length + ' observations — FRED Trade-Weighted Dollar Index (build-time fetch)', 'loaded');
+  setStatus('dollar-status', '✦ ' + FRED_DOLLAR.length + ' observations — FRED Trade-Weighted Dollar Index (build-time fetch)', 'loaded');
   drawAreaChart('dollar-chart', [
     { label: 'USD Index', data: data, color: '#44474e' }
   ], {
     yLabel: 'INDEX (JAN 2006 = 100)',
     yFormat: function(v) { return v.toFixed(1); },
-    events: [
+    events: mobileEvents([
       { year: 2020.25, label: 'COVID Dollar Surge' },
       { year: 2022.15, label: 'Fed Rate Hikes Begin' },
       { year: 2022.75, label: 'Dollar Peak' },
       { year: 2024.0, label: 'Rate Cut Expectations' }
-    ]
+    ], 2)
   });
 }
 
 // --- 2. GOLD PRICE — AREA CHART ---
 function loadGoldChart() {
-  var data = FRED_GOLD;
+  var data = _isMobile ? thinData(FRED_GOLD, 30) : FRED_GOLD;
   if (!data || !data.length) { setStatus('gold-status', '✗ No gold data available', 'error'); return; }
   _chartData.gold = data;
-  setStatus('gold-status', '✦ ' + data.length + ' observations — FRED Gold Mining PPI (build-time fetch)', 'loaded');
+  setStatus('gold-status', '✦ ' + FRED_GOLD.length + ' observations — FRED Gold Mining PPI (build-time fetch)', 'loaded');
   drawBarChart('gold-chart', [
     { label: 'Gold PPI', data: data, color: '#8b6914' }
   ], {
     yLabel: 'PRODUCER PRICE INDEX (DEC 2003 = 100)',
     yFormat: function(v) { return v.toFixed(0); },
-    events: [
+    events: mobileEvents([
       { year: 2020.6, label: 'COVID Safe Haven' },
       { year: 2022.15, label: 'Ukraine Invasion' },
       { year: 2023.25, label: 'Banking Crisis' },
       { year: 2024.25, label: 'Central Bank Buying' }
-    ]
+    ], 2)
   });
 }
 
 // --- 3. BRENT CRUDE OIL — STEPPED AREA CHART ---
 function loadOilChart() {
-  var data = FRED_OIL;
+  var data = _isMobile ? thinData(FRED_OIL, 30) : FRED_OIL;
   if (!data || !data.length) { setStatus('oil-status', '✗ No oil data available', 'error'); return; }
   _chartData.oil = data;
-  setStatus('oil-status', '✦ ' + data.length + ' observations — FRED Brent Crude Oil (build-time fetch)', 'loaded');
+  setStatus('oil-status', '✦ ' + FRED_OIL.length + ' observations — FRED Brent Crude Oil (build-time fetch)', 'loaded');
   drawSteppedArea('oil-chart', [
     { label: 'Brent Crude ($/bbl)', data: data, color: '#2d6e5f' }
   ], {
     yLabel: 'PRICE PER BARREL (USD)',
     yFormat: function(v) { return '$' + v.toFixed(0); },
-    events: [
+    events: mobileEvents([
       { year: 2020.3, label: 'COVID Crash' },
       { year: 2021.5, label: 'Recovery Rally' },
       { year: 2022.15, label: 'Ukraine War Spike' },
       { year: 2023.5, label: 'OPEC+ Cuts' },
       { year: 2024.8, label: 'Red Sea Disruption' }
-    ]
+    ], 2)
   });
 }
 
 // --- 4. TREASURY YIELD SPREAD — ZERO-CROSSING CHART ---
 function loadTreasuryChart() {
-  var data = FRED_TREASURY;
+  var data = _isMobile ? thinData(FRED_TREASURY, 30) : FRED_TREASURY;
   if (!data || !data.length) { setStatus('treasury-status', '✗ No treasury data available', 'error'); return; }
   _chartData.treasury = data;
-  setStatus('treasury-status', '✦ ' + data.length + ' observations — FRED 10Y-2Y Treasury Spread (build-time fetch)', 'loaded');
+  setStatus('treasury-status', '✦ ' + FRED_TREASURY.length + ' observations — FRED 10Y-2Y Treasury Spread (build-time fetch)', 'loaded');
   drawSpreadChart('treasury-chart', data, {
-    events: [
+    events: mobileEvents([
       { year: 2022.3, label: 'Curve Inverts' },
       { year: 2023.5, label: 'Deepest Inversion' },
       { year: 2024.7, label: 'Curve Normalising' }
-    ]
+    ], 2)
   });
 }
 
 // --- 5. VIX VOLATILITY INDEX — AREA CHART ---
 function loadVIXChart() {
-  var data = FRED_VIX;
+  var data = _isMobile ? thinData(FRED_VIX, 30) : FRED_VIX;
   if (!data || !data.length) { setStatus('vix-status', '✗ No VIX data available', 'error'); return; }
   _chartData.vix = data;
-  setStatus('vix-status', '✦ ' + data.length + ' observations — FRED CBOE Volatility Index (build-time fetch)', 'loaded');
+  setStatus('vix-status', '✦ ' + FRED_VIX.length + ' observations — FRED CBOE Volatility Index (build-time fetch)', 'loaded');
   drawLollipopChart('vix-chart', [
     { label: 'VIX', data: data, color: '#c4442d' }
   ], {
     yLabel: 'EXPECTED VOLATILITY (%)',
     yFormat: function(v) { return v.toFixed(0); },
     baseline: 20,
-    events: [
+    events: mobileEvents([
       { year: 2020.2, label: 'COVID Panic (82.7)' },
       { year: 2022.15, label: 'Ukraine Shock' },
       { year: 2023.25, label: 'SVB Collapse' },
       { year: 2024.6, label: 'Yen Carry Unwind' }
-    ]
+    ], 2)
   });
 }
 
 // --- 6. USD/EUR FOREX — FRED (DEXUSEU) ---
 function loadForexChart() {
-  var data = FRED_FOREX;
+  var data = _isMobile ? thinData(FRED_FOREX, 30) : FRED_FOREX;
   if (!data || !data.length) { setStatus('forex-status', '✗ No forex data available', 'error'); return; }
   _chartData.forex = data;
-  setStatus('forex-status', '✦ ' + data.length + ' observations — FRED USD/EUR Exchange Rate (build-time fetch)', 'loaded');
+  setStatus('forex-status', '✦ ' + FRED_FOREX.length + ' observations — FRED USD/EUR Exchange Rate (build-time fetch)', 'loaded');
   drawDotPlot('forex-chart', [
     { label: 'USD/EUR', data: data, color: '#5c4d8b' }
   ], {
     yLabel: 'USD PER 1 EUR',
     yFormat: function(v) { return v.toFixed(3); },
-    events: [
+    events: mobileEvents([
       { year: 2020.25, label: 'COVID Volatility' },
       { year: 2022.15, label: 'Fed Hike Cycle' },
       { year: 2022.75, label: 'EUR Parity Crisis' },
       { year: 2024.5, label: 'Rate Cut Divergence' }
-    ]
+    ], 2)
   });
 }
 

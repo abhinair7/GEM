@@ -725,6 +725,11 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .playbook-card { padding: 24px; }
   .slider-panel { padding: 28px 20px; }
   .chart-panel { padding: 24px 16px; }
+  .chart-panel canvas { max-height: 260px; }
+  .chart-panel-title { font-size: 0.55rem; }
+  .chart-panel-sub { font-size: 0.65rem; line-height: 1.5; margin-bottom: 16px; }
+  .real-chart-status { font-size: 0.6rem; }
+  .data-table-wrap { font-size: 0.65rem; }
   footer { flex-direction: column; gap: 16px; text-align: center; padding: 40px 20px; }
 }
 
@@ -740,6 +745,9 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .splash-orbit-title { font-size: clamp(1.8rem, 10vw, 3rem); }
   .splash-orbit-ring-wrap { display: block; }
   .splash-scroll-cue { bottom: 24px; }
+  .chart-panel canvas { max-height: 220px; }
+  .chart-panel-sub { display: none; }
+  .real-chart-status { font-size: 0.55rem; }
   .splash-reveal-inner { padding: 0 16px; }
   .splash-reveal-title { font-size: clamp(1.5rem, 7vw, 2.2rem); }
   .splash-reveal-subtitle { font-size: 0.75rem; line-height: 1.7; }
