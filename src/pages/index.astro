@@ -830,8 +830,9 @@ document.getElementById('recalibrate').addEventListener('click', () => {
 // =========================================================
 function drawRadar(input, matchedEra) {
   const canvas = document.getElementById('radar-chart');
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const cx = W/2, cy = H/2 + 10, R = Math.min(W,H)*0.35;
   ctx.clearRect(0,0,W,H);
   const labels = ['Trade', 'Politics', 'Security', 'Benefit'];
@@ -911,13 +912,9 @@ function pcaProject(profiles, inputPoint) {
 
 function drawScatter(input, matchedEra) {
   const canvas = document.getElementById('scatter-chart');
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = canvas.width, cssH = canvas.height;
-  canvas.width = cssW * dpr; canvas.height = cssH * dpr;
-  canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  const W = cssW, H = cssH;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const pad = { top: 55, right: 50, bottom: 55, left: 60 };
   ctx.clearRect(0,0,W,H);
 
@@ -1016,8 +1013,9 @@ function drawScatter(input, matchedEra) {
 // =========================================================
 function drawLifecycle() {
   const canvas = document.getElementById('lifecycle-chart');
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const pad = { top: 30, right: 140, bottom: 50, left: 60 };
   ctx.clearRect(0,0,W,H);
   const curves = {
@@ -1121,8 +1119,9 @@ document.querySelectorAll('.era-artifact').forEach((artifact, i) => {
 function drawGroupedBar(canvasId, datasets, options = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const pad = { top: 35, right: 130, bottom: 55, left: 70 };
   const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
   ctx.clearRect(0, 0, W, H);
@@ -1244,8 +1243,9 @@ function drawGroupedBar(canvasId, datasets, options = {}) {
 function drawAreaChart(canvasId, datasets, options = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const pad = { top: 35, right: 40, bottom: 55, left: 70 };
   const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
   ctx.clearRect(0, 0, W, H);
@@ -1317,8 +1317,9 @@ function drawAreaChart(canvasId, datasets, options = {}) {
 function drawBarChart(canvasId, datasets, options = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const pad = { top: 35, right: 40, bottom: 55, left: 70 };
   const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
   ctx.clearRect(0, 0, W, H);
@@ -1400,8 +1401,9 @@ function drawBarChart(canvasId, datasets, options = {}) {
 function drawLollipopChart(canvasId, datasets, options = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const pad = { top: 35, right: 40, bottom: 55, left: 70 };
   const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
   ctx.clearRect(0, 0, W, H);
@@ -1491,8 +1493,9 @@ function drawLollipopChart(canvasId, datasets, options = {}) {
 function drawDotPlot(canvasId, datasets, options = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const pad = { top: 35, right: 40, bottom: 55, left: 70 };
   const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
   ctx.clearRect(0, 0, W, H);
@@ -1588,8 +1591,9 @@ function drawDotPlot(canvasId, datasets, options = {}) {
 function drawSteppedArea(canvasId, datasets, options = {}) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
+  const W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   const pad = { top: 35, right: 40, bottom: 55, left: 70 };
   const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
   ctx.clearRect(0, 0, W, H);
@@ -1701,8 +1705,9 @@ function setStatus(id, text, state) {
 function drawSpreadChart(canvasId, data, options) {
   options = options || {};
   var canvas = document.getElementById(canvasId);
+  if (!canvas._cssW) fitCanvasToContainer(canvas);
   var ctx = canvas.getContext('2d');
-  var W = canvas.width, H = canvas.height;
+  var W = canvas._cssW || canvas.width, H = canvas._cssH || canvas.height;
   var pad = { top: 35, right: 40, bottom: 55, left: 70 };
   var cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
   ctx.clearRect(0, 0, W, H);
@@ -2052,17 +2057,36 @@ Eras: ${eraKeys.map(k => eraLabels[k]).join(', ')}`;
   }
 }
 
-// --- RESPONSIVE CANVAS SIZING ---
-// Resize all canvases to fit their container before drawing
+// --- RESPONSIVE CANVAS SIZING (DPR-AWARE) ---
+// Size canvas to container, render at native device resolution for crisp charts
 function fitCanvasToContainer(canvas) {
   const parent = canvas.parentElement;
   if (!parent) return;
-  const w = parent.clientWidth - 32; // account for chart-panel padding
-  if (w < canvas.width) {
-    const ratio = canvas.height / canvas.width;
-    canvas.width = Math.max(w, 280);
-    canvas.height = Math.round(canvas.width * ratio);
+  const dpr = window.devicePixelRatio || 1;
+  const style = getComputedStyle(parent);
+  const padL = parseFloat(style.paddingLeft) || 0;
+  const padR = parseFloat(style.paddingRight) || 0;
+  const cssW = Math.floor(parent.clientWidth - padL - padR);
+  // Store original HTML attribute dimensions on first call
+  if (!canvas._origW) {
+    canvas._origW = parseInt(canvas.getAttribute('width')) || canvas.width;
+    canvas._origH = parseInt(canvas.getAttribute('height')) || canvas.height;
   }
+  const ratio = canvas._origH / canvas._origW;
+  const w = Math.min(cssW, canvas._origW);
+  const h = Math.round(w * ratio);
+  // Set internal resolution to DPR multiple for crisp rendering
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  // Set CSS display size
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  // Scale context so drawing code uses CSS pixels
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Store CSS dimensions for draw functions
+  canvas._cssW = w;
+  canvas._cssH = h;
 }
 document.querySelectorAll('canvas').forEach(fitCanvasToContainer);
 
