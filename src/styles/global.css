@@ -154,7 +154,7 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
 .splash-orbit {
   display: none;
   position: absolute;
-  bottom: 14vh;
+  bottom: 28vh;
   left: 0;
   right: 0;
   z-index: 4;
