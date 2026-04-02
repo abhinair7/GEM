@@ -595,17 +595,19 @@ document.addEventListener('mousemove', e => {
 gsap.registerPlugin(ScrollTrigger);
 
 // Splash — scroll-driven curtain reveal (pinned)
+// Use viewport-relative scroll distance so reveal feels identical on every screen
 const splash = document.getElementById('splash');
 if (splash) {
   const splashTL = gsap.timeline({
     scrollTrigger: {
       trigger: splash,
       start: 'top top',
-      end: '+=1200',
+      end: () => '+=' + (window.innerHeight * 1.5),
       scrub: 0.5,
       pin: true,
       pinSpacing: true,
       anticipatePin: 1,
+      invalidateOnRefresh: true,
     }
   });
   splashTL
