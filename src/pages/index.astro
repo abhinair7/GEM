@@ -6,28 +6,6 @@ import '../styles/global.css';
 export const prerender = true; // This page is static (hybrid mode)
 
 const CEREBRAS_API_KEY = import.meta.env.PUBLIC_CEREBRAS_API_KEY || '';
-const GNEWS_API_KEY = import.meta.env.PUBLIC_GNEWS_API_KEY || '';
-
-// ── BUILD-TIME NEWS FETCH (GNews blocks browser CORS) ──
-let GNEWS_ARTICLES: any[] = [];
-try {
-  const gnewsKey = GNEWS_API_KEY || '3548eec4eefeecd8bdae9d8f8c29cf2e';
-  const gnewsResp = await fetch(`https://gnews.io/api/v4/search?q=iran+united+states&lang=en&max=8&apikey=${gnewsKey}`);
-  if (gnewsResp.ok) {
-    const gnewsData = await gnewsResp.json();
-    if (gnewsData.articles && gnewsData.articles.length >= 2) {
-      GNEWS_ARTICLES = gnewsData.articles.map((a: any) => ({
-        title: a.title,
-        desc: a.description || a.source?.name || '',
-        url: a.url,
-        time: a.publishedAt
-      }));
-    }
-  }
-} catch (e) {
-  console.error('[BUILD] GNews fetch error:', e);
-}
-console.log(`[BUILD] GNews articles: ${GNEWS_ARTICLES.length}`);
 
 const eraArtifacts: Record<string, string> = {
   romana: `<svg class="era-artifact-svg" viewBox="0 0 60 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -478,7 +456,7 @@ const eraArtifacts: Record<string, string> = {
 <!-- =========================================================
      ENGINE SCRIPT — All simulation logic, charts, GDELT feed
      ========================================================= -->
-<script is:inline define:vars={{ CEREBRAS_API_KEY, GNEWS_ARTICLES }}>
+<script is:inline define:vars={{ CEREBRAS_API_KEY }}>
 // CORE DATA (inline for client-side performance)
 const eraProfiles = {
   romana: { trade: 0.82, politics: 0.90, security: 0.88, benefit: 0.25 },
@@ -727,16 +705,26 @@ const fallbackEvents = [
   { time: '04:45 UTC', title: 'European Parliament Calls for Renewed JCPOA Talks', desc: 'Non-binding resolution 412-198 urging engagement. France and Germany willing to mediate.', impacts: [{ pillar:'politics', delta:0.07, label:'Politics' }, { pillar:'trade', delta:0.03, label:'Trade' }] },
 ];
 
-// News feed: use build-time GNews data (avoids browser CORS), fallback to simulated
+// News feed: fetch from /api/news (GDELT proxy) at runtime, fallback to simulated
 function fetchGNews() {
-  if (GNEWS_ARTICLES && GNEWS_ARTICLES.length >= 2) {
-    document.getElementById('feed-source-tag').textContent = 'GNews API — LIVE';
-    dripArticles(GNEWS_ARTICLES);
-  } else {
-    console.log('No build-time GNews data — using simulated feed');
-    document.getElementById('feed-source-tag').textContent = 'SIMULATED — APIs Unavailable';
-    loadFallback();
-  }
+  document.getElementById('feed-source-tag').textContent = '⟳ Fetching live intel…';
+  fetch('/api/news')
+    .then(function(r) { return r.json(); })
+    .then(function(json) {
+      if (json.articles && json.articles.length >= 2) {
+        document.getElementById('feed-source-tag').textContent = 'GDELT API — LIVE';
+        dripArticles(json.articles);
+      } else {
+        console.log('No GDELT articles — using simulated feed');
+        document.getElementById('feed-source-tag').textContent = 'SIMULATED SCENARIO';
+        loadFallback();
+      }
+    })
+    .catch(function(err) {
+      console.error('News fetch error:', err);
+      document.getElementById('feed-source-tag').textContent = 'SIMULATED SCENARIO';
+      loadFallback();
+    });
 }
 
 // Drip-feed live articles one by one
