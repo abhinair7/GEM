@@ -2,60 +2,21 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { bgArtifactImages, eraCards, historicalData } from '../data/eras';
 import '../styles/global.css';
+import fredData from '../data/fred.json';
 
 const CEREBRAS_API_KEY = import.meta.env.PUBLIC_CEREBRAS_API_KEY || '';
 const GNEWS_API_KEY = import.meta.env.PUBLIC_GNEWS_API_KEY || '';
-const ALPHAVANTAGE_API_KEY = import.meta.env.PUBLIC_ALPHAVANTAGE_API_KEY || '';
 
-// ── SERVER-SIDE DATA FETCHING (runs at build time — no CORS) ──
-function parseFredCsv(csv: string) {
-  return csv.trim().split('\n').slice(1).reduce((arr: any[], line: string) => {
-    const [dateStr, valStr] = line.split(',');
-    if (valStr && valStr !== '.' && !isNaN(parseFloat(valStr))) {
-      const [y, m] = dateStr.split('-').map(Number);
-      arr.push({ year: y + (m - 1) / 12, value: parseFloat(valStr), date: dateStr });
-    }
-    return arr;
-  }, []).sort((a: any, b: any) => a.year - b.year);
-}
+// ── STATIC FRED DATA (pre-fetched locally, Vercel-safe) ──
+// To refresh: npm run refresh-data
+const FRED_DOLLAR = fredData.dollar || [];
+const FRED_GOLD = fredData.gold || [];
+const FRED_OIL = fredData.oil || [];
+const FRED_TREASURY = fredData.treasury || [];
+const FRED_VIX = fredData.vix || [];
+const FRED_FOREX = fredData.forex || [];
 
-async function fetchFredSeries(id: string) {
-  try {
-    const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=2020-01-01&coed=2026-12-31&fq=Monthly&fam=avg`;
-    const resp = await fetch(url);
-    if (!resp.ok) return [];
-    return parseFredCsv(await resp.text());
-  } catch { return []; }
-}
-
-async function fetchAlphaVantageForex() {
-  try {
-    if (!ALPHAVANTAGE_API_KEY) return [];
-    const url = `https://www.alphavantage.co/query?function=FX_MONTHLY&from_symbol=USD&to_symbol=EUR&apikey=${ALPHAVANTAGE_API_KEY}`;
-    const resp = await fetch(url);
-    if (!resp.ok) return [];
-    const json = await resp.json();
-    const series = json['Time Series FX (Monthly)'];
-    if (!series) return [];
-    return Object.entries(series).reduce((arr: any[], [dateStr, vals]: [string, any]) => {
-      const [y, m] = dateStr.split('-').map(Number);
-      if (y >= 2020) arr.push({ year: y + (m - 1) / 12, value: parseFloat(vals['4. close']), date: dateStr });
-      return arr;
-    }, []).sort((a: any, b: any) => a.year - b.year);
-  } catch { return []; }
-}
-
-// Fetch all 6 datasets in parallel at build time
-const [FRED_DOLLAR, FRED_GOLD, FRED_OIL, FRED_TREASURY, FRED_VIX, FRED_FOREX] = await Promise.all([
-  fetchFredSeries('DTWEXBGS'),
-  fetchFredSeries('PCU21222122'),
-  fetchFredSeries('DCOILBRENTEU'),
-  fetchFredSeries('T10Y2Y'),
-  fetchFredSeries('VIXCLS'),
-  fetchFredSeries('DEXUSEU'),
-]);
-
-console.log(`[BUILD] FRED data: Dollar=${FRED_DOLLAR.length}, Gold=${FRED_GOLD.length}, Oil=${FRED_OIL.length}, Treasury=${FRED_TREASURY.length}, VIX=${FRED_VIX.length}, Forex=${FRED_FOREX.length}`);
+console.log(`[BUILD] FRED static data: Dollar=${FRED_DOLLAR.length}, Gold=${FRED_GOLD.length}, Oil=${FRED_OIL.length}, Treasury=${FRED_TREASURY.length}, VIX=${FRED_VIX.length}, Forex=${FRED_FOREX.length}`);
 
 const eraArtifacts: Record<string, string> = {
   romana: `<svg class="era-artifact-svg" viewBox="0 0 60 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
