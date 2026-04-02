@@ -122,7 +122,6 @@ const eraArtifacts: Record<string, string> = {
       <div class="splash-reveal-rule"></div>
       <h1 class="splash-reveal-title">Six empires cracked<br>the same code.<br>We <em>reverse-engineered</em> it.</h1>
       <p class="splash-reveal-subtitle">The blueprint behind every golden age in recorded history — distilled into four variables, mapped against today's conflicts, and delivered as a strategic playbook you can actually use.</p>
-      <a href="#simulation" class="splash-reveal-cta">Enter the Simulation <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
     </div>
     <div class="splash-reveal-scroll"><div class="splash-reveal-scroll-line"></div> Scroll to explore</div>
   </div>
@@ -329,22 +328,22 @@ const eraArtifacts: Record<string, string> = {
   </div>
 
   <div class="chart-panel analysis-full reveal">
-    <div class="chart-panel-title">U.S. vs Iran — GDP Per Capita by Decade</div>
-    <div class="chart-panel-sub">Grouped bar comparison. Constant 2015 USD. Source: World Bank (NY.GDP.PCAP.KD). Decade-averaged to reveal structural divergence.</div>
+    <div class="chart-panel-title">U.S. vs Iran — GDP Per Capita (2020–Present)</div>
+    <div class="chart-panel-sub">Year-by-year comparison. Constant 2015 USD. Source: World Bank (NY.GDP.PCAP.KD). Post-pandemic divergence in real-time.</div>
     <div class="real-chart-status" id="gdp-status">⟳ Fetching World Bank data…</div>
     <canvas id="gdp-chart" width="1100" height="400"></canvas>
   </div>
 
   <div class="chart-panel analysis-full reveal">
-    <div class="chart-panel-title">Trade Openness — U.S. vs Iran (% of GDP)</div>
-    <div class="chart-panel-sub">Exports + Imports as share of GDP. Source: World Bank (NE.TRD.GNFS.ZS). Area fills show the scale gap in economic openness vs. isolation.</div>
+    <div class="chart-panel-title">Trade Openness — U.S. vs Iran (2020–Present)</div>
+    <div class="chart-panel-sub">Exports + Imports as share of GDP. Source: World Bank (NE.TRD.GNFS.ZS). Post-COVID trade recovery patterns and sanctions impact.</div>
     <div class="real-chart-status" id="trade-status">⟳ Loading…</div>
     <canvas id="trade-chart" width="1100" height="400"></canvas>
   </div>
 
   <div class="chart-panel analysis-full reveal">
-    <div class="chart-panel-title">Brent Crude Oil — Stepped Area with Events</div>
-    <div class="chart-panel-sub">Stepped area chart showing price plateaus and shocks. Source: FRED (DCOILBRENTEU). Event markers highlight geopolitical triggers.</div>
+    <div class="chart-panel-title">Brent Crude Oil — 2020 to Present</div>
+    <div class="chart-panel-sub">Stepped area chart showing post-pandemic price recovery, Ukraine war shock, and current plateau. Source: FRED (DCOILBRENTEU).</div>
     <div class="real-chart-status" id="oil-status">⟳ Fetching FRED data…</div>
     <canvas id="oil-chart" width="1100" height="420"></canvas>
   </div>
@@ -563,8 +562,7 @@ if (splash) {
     .to('.splash-reveal-rule',     { scaleX: 1, duration: 0.14, ease: 'none' }, 0.42)
     .to('.splash-reveal-title',    { opacity: 1, y: 0, duration: 0.18, ease: 'none' }, 0.44)
     .to('.splash-reveal-subtitle', { opacity: 1, y: 0, duration: 0.14, ease: 'none' }, 0.56)
-    .to('.splash-reveal-cta',      { opacity: 1, y: 0, duration: 0.12, ease: 'none' }, 0.64)
-    .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.10, ease: 'none' }, 0.72);
+    .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.10, ease: 'none' }, 0.68);
 }
 document.querySelectorAll('.reveal').forEach(el => {
   gsap.to(el, { scrollTrigger: { trigger: el, start: 'top 85%' }, opacity:1, y:0, duration:0.8, ease:'power3.out' });
@@ -1318,8 +1316,8 @@ function setStatus(id, text, state) {
 async function loadGDPChart() {
   try {
     const [usData, irData] = await Promise.all([
-      fetchWorldBank('NY.GDP.PCAP.KD', 'US', 1960, 2023),
-      fetchWorldBank('NY.GDP.PCAP.KD', 'IR', 1960, 2023)
+      fetchWorldBank('NY.GDP.PCAP.KD', 'US', 2020, 2025),
+      fetchWorldBank('NY.GDP.PCAP.KD', 'IR', 2020, 2025)
     ]);
     setStatus('gdp-status', '✦ ' + (usData.length + irData.length) + ' data points loaded — World Bank Open Data', 'loaded');
     drawGroupedBar('gdp-chart', [
@@ -1329,9 +1327,8 @@ async function loadGDPChart() {
       yLabel: 'GDP PER CAPITA (CONSTANT 2015 USD)',
       yFormat: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v.toFixed(0)),
       events: [
-        { year: 1979, label: 'Iranian Revolution' },
-        { year: 2012, label: 'Oil Sanctions Peak' },
-        { year: 2018, label: 'JCPOA Withdrawal' }
+        { year: 2020, label: 'COVID-19 Pandemic' },
+        { year: 2022, label: 'Ukraine War / Sanctions' }
       ]
     });
   } catch(e) {
@@ -1343,8 +1340,8 @@ async function loadGDPChart() {
 async function loadTradeChart() {
   try {
     const [usData, irData] = await Promise.all([
-      fetchWorldBank('NE.TRD.GNFS.ZS', 'US', 1960, 2023),
-      fetchWorldBank('NE.TRD.GNFS.ZS', 'IR', 1960, 2023)
+      fetchWorldBank('NE.TRD.GNFS.ZS', 'US', 2020, 2025),
+      fetchWorldBank('NE.TRD.GNFS.ZS', 'IR', 2020, 2025)
     ]);
     setStatus('trade-status', '✦ ' + (usData.length + irData.length) + ' pts — World Bank', 'loaded');
     drawAreaChart('trade-chart', [
@@ -1357,7 +1354,7 @@ async function loadTradeChart() {
 // --- 3. BRENT CRUDE OIL — STEPPED AREA CHART ---
 async function loadOilChart() {
   try {
-    const resp = await fetch('https://fred.stlouisfed.org/graph/fredgraph.csv?bgcolor=%23e1e9f0&chart_type=line&drp=0&fo=open%20sans&graph_bgcolor=%23ffffff&height=450&mode=fred&recession_bars=on&txtcolor=%23444444&ts=12&tts=12&width=1168&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles=yes&show_tooltip=yes&id=DCOILBRENTEU&scale=left&cosd=1987-05-20&coed=2025-03-31&line_color=%234572a7&link_values=false&line_style=solid&mark_type=none&mw=3&lw=2&ost=-99999&oet=99999&mma=0&fml=a&fq=Monthly&fam=avg&fgst=lin&fgsnd=2020-02-01&line_index=1&transformation=lin&vintage_date=2025-04-01&revision_date=2025-04-01&nd=1987-05-20');
+    const resp = await fetch('https://fred.stlouisfed.org/graph/fredgraph.csv?bgcolor=%23e1e9f0&chart_type=line&drp=0&fo=open%20sans&graph_bgcolor=%23ffffff&height=450&mode=fred&recession_bars=on&txtcolor=%23444444&ts=12&tts=12&width=1168&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles=yes&show_tooltip=yes&id=DCOILBRENTEU&scale=left&cosd=2020-01-01&coed=2026-03-31&line_color=%234572a7&link_values=false&line_style=solid&mark_type=none&mw=3&lw=2&ost=-99999&oet=99999&mma=0&fml=a&fq=Monthly&fam=avg&fgst=lin&fgsnd=2020-02-01&line_index=1&transformation=lin&vintage_date=2026-04-01&revision_date=2026-04-01&nd=2020-01-01');
     if (!resp.ok) throw new Error('FRED API ' + resp.status);
     const csv = await resp.text();
     const lines = csv.trim().split('\n').slice(1);
@@ -1388,20 +1385,17 @@ async function loadOilChart() {
       yLabel: 'PRICE PER BARREL (USD)',
       yFormat: v => '$' + v.toFixed(0),
       events: [
-        { year: 1990.6, label: 'Gulf War I' },
-        { year: 1997, label: 'Asian Crisis' },
-        { year: 2003.3, label: 'Iraq Invasion' },
-        { year: 2008.5, label: '$147 Peak / GFC' },
-        { year: 2011, label: 'Arab Spring' },
-        { year: 2014.5, label: 'Oil Glut' },
         { year: 2020.2, label: 'COVID Crash' },
-        { year: 2022.2, label: 'Ukraine War' }
+        { year: 2021.5, label: 'Recovery Rally' },
+        { year: 2022.2, label: 'Ukraine War Spike' },
+        { year: 2023.5, label: 'OPEC+ Cuts' },
+        { year: 2024.8, label: 'Red Sea Disruption' }
       ]
     });
   } catch(e) {
     setStatus('oil-status', '✗ FRED CORS blocked — loading fallback via World Bank crude proxy', 'error');
     try {
-      const oilData = await fetchWorldBank('NY.GDP.PETR.RT.ZS', 'IR', 1970, 2023);
+      const oilData = await fetchWorldBank('NY.GDP.PETR.RT.ZS', 'IR', 2020, 2025);
       setStatus('oil-status', '✦ Fallback: Iran Oil Rents (% GDP) — ' + oilData.length + ' pts — World Bank', 'loaded');
       drawSteppedArea('oil-chart', [
         { label: 'Iran Oil Rents (% GDP)', data: oilData, color: '#2d6e5f' }
