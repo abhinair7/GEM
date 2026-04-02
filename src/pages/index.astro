@@ -227,10 +227,10 @@ const eraArtifacts: Record<string, string> = {
   <div class="era-grid">
     {eraCards.map((era) => (
       <div class="era-card reveal" data-era={era.key}>
-        <img class="era-card-img" src={era.image} alt="" />
+        <img class="era-card-img" src={era.image} alt={era.title} loading="lazy" decoding="async" />
         <div class="era-artifact" set:html={eraArtifacts[era.key]} />
         <div class="era-figure">
-          <img class="era-figure-img" src={era.figure} alt={era.figureName} />
+          <img class="era-figure-img" src={era.figure} alt={era.figureName} loading="lazy" decoding="async" />
         </div>
         <div class="era-card-overlay">
           <div class="era-card-date">{era.date}</div>
@@ -639,7 +639,7 @@ if (splash) {
     scrollTrigger: {
       trigger: splash,
       start: 'top top',
-      end: () => '+=' + (window.innerHeight * 0.6),
+      end: () => '+=' + (window.innerHeight * 1.5),
       scrub: 0.5,
       pin: true,
       pinSpacing: true,
@@ -1173,6 +1173,15 @@ document.querySelectorAll('.era-artifact').forEach((artifact, i) => {
       onComplete: () => artifact.classList.add('is-visible')
     }
   );
+});
+
+// Gracefully handle broken images — hide broken indicator, show fallback bg
+document.querySelectorAll('.era-card-img, .era-figure-img').forEach(img => {
+  img.addEventListener('error', () => {
+    img.style.display = 'none';
+    const card = img.closest('.era-card');
+    if (card) card.style.background = 'linear-gradient(135deg, #1a1c1b 0%, #2a2c2b 100%)';
+  });
 });
 
 // =========================================================

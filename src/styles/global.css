@@ -422,7 +422,7 @@ section { position: relative; z-index: 2; min-height: 100vh; padding: 120px 48px
 .era-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
 .era-card { position: relative; background: var(--surface); overflow: hidden; cursor: pointer; transition: transform 0.5s cubic-bezier(0.23,1,0.32,1), box-shadow 0.5s; }
 .era-card:hover { transform: translateY(-6px); box-shadow: 0 20px 60px rgba(0,0,0,0.08); }
-.era-card-img { width: 100%; aspect-ratio: 16/10; object-fit: cover; filter: grayscale(40%) brightness(0.9); transition: filter 0.8s, transform 0.8s; }
+.era-card-img { width: 100%; aspect-ratio: 16/10; object-fit: cover; filter: grayscale(40%) brightness(0.9); transition: filter 0.8s, transform 0.8s; background: linear-gradient(135deg, #1a1c1b 0%, #2a2c2b 100%); }
 .era-card:hover .era-card-img { filter: grayscale(0%) brightness(0.95); transform: scale(1.05); }
 .era-card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(26,28,27,0.92) 0%, rgba(26,28,27,0.3) 50%, transparent 100%); padding: 24px; display: flex; flex-direction: column; justify-content: flex-end; }
 .era-card-date { font-size: 0.5625rem; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
@@ -727,6 +727,7 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .splash-reveal-subtitle { font-size: 0.8125rem; }
   .splash-orbit { display: flex; justify-content: center; align-items: center; }
   .splash-orbit-ring-wrap { display: block; }
+  .era-grid { grid-template-columns: repeat(2, 1fr); }
   .metrics-row { grid-template-columns: 1fr; }
   .feed-header { flex-direction: column; align-items: flex-start; gap: 12px; }
   .feed-item { grid-template-columns: 60px 1fr; gap: 10px; padding: 14px 16px; }
@@ -766,6 +767,7 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .splash-orbit-title { font-size: clamp(1.8rem, 10vw, 3rem); }
   .splash-orbit-ring-wrap { display: block; }
   .splash-scroll-cue { bottom: 24px; }
+  .era-grid { grid-template-columns: 1fr; }
   .chart-panel canvas { max-height: 220px; }
   .chart-panel-sub { display: none; }
   .real-chart-status { font-size: 0.55rem; }
