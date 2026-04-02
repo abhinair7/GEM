@@ -2052,6 +2052,20 @@ Eras: ${eraKeys.map(k => eraLabels[k]).join(', ')}`;
   }
 }
 
+// --- RESPONSIVE CANVAS SIZING ---
+// Resize all canvases to fit their container before drawing
+function fitCanvasToContainer(canvas) {
+  const parent = canvas.parentElement;
+  if (!parent) return;
+  const w = parent.clientWidth - 32; // account for chart-panel padding
+  if (w < canvas.width) {
+    const ratio = canvas.height / canvas.width;
+    canvas.width = Math.max(w, 280);
+    canvas.height = Math.round(canvas.width * ratio);
+  }
+}
+document.querySelectorAll('canvas').forEach(fitCanvasToContainer);
+
 // --- LAUNCH ALL REAL DATA CHARTS ---
 // Data was pre-fetched at build time (server-side) — no CORS issues, instant render
 function loadAllRealCharts() {

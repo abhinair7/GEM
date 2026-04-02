@@ -593,20 +593,83 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
 .reveal { opacity: 0; transform: translateY(40px); }
 
 /* ========== RESPONSIVE ========== */
+
+/* Tablet landscape / small laptop */
 @media (max-width: 1024px) {
   .sim-grid, .feed-layout { grid-template-columns: 1fr; }
-  .thesis-right, .era-grid, .analysis-grid, .doctrine-grid { grid-template-columns: 1fr; }
+  .thesis-right, .analysis-grid { grid-template-columns: 1fr; }
   #thesis { grid-template-columns: 1fr; gap: 48px; }
-  .alignment-section { grid-template-columns: 1fr; gap: 48px; }
   .playbook-grid { grid-template-columns: 1fr; }
   .era-intel-grid { grid-template-columns: repeat(2, 1fr); }
   .era-intel-header { flex-direction: column; align-items: flex-start; }
+  .era-grid { grid-template-columns: repeat(2, 1fr); }
+  .slider-panel { position: static; }
+  .feed-impact-panel { position: static; }
 }
+
+/* Tablet portrait */
 @media (max-width: 768px) {
-  section { padding: 100px 24px 60px; }
-  nav { padding: 0 24px; }
+  section { padding: 80px 20px 60px; }
+  nav { padding: 0 16px; gap: 8px; }
+  .nav-links { display: none; }
+  .nav-status { font-size: 0.5625rem; }
+  .splash-title-wrap { padding-top: 20vh; }
+  .splash-title { font-size: clamp(2rem, 8vw, 3.5rem); }
+  .splash-reveal-inner { padding: 0 24px; }
+  .splash-reveal-title { font-size: clamp(1.8rem, 6vw, 3rem); }
+  .splash-reveal-subtitle { font-size: 0.8125rem; }
   .era-grid { grid-template-columns: 1fr; }
   .metrics-row { grid-template-columns: 1fr; }
   .feed-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .feed-item { grid-template-columns: 60px 1fr; gap: 10px; padding: 14px 16px; }
+  .feed-impact { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .feed-stream { max-height: 420px; }
   .era-intel-grid { grid-template-columns: 1fr; }
+  #livefeed { padding-top: 100px; padding-bottom: 100px; }
+  #eras, #simulation, #analysis { padding-top: 100px; padding-bottom: 100px; }
+  .sim-header h2, .analysis-header h2, #eras h2 { font-size: clamp(1.6rem, 5vw, 2.4rem); }
+  .prosperity-score { font-size: 4rem; }
+  .result-hero { padding: 32px 24px; }
+  .era-match { padding: 24px; }
+  .era-match h3 { font-size: 1.5rem; }
+  .playbook-card { padding: 24px; }
+  .slider-panel { padding: 28px 20px; }
+  .chart-panel { padding: 24px 16px; }
+  footer { flex-direction: column; gap: 16px; text-align: center; padding: 40px 20px; }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  section { padding: 60px 16px 48px; }
+  nav { height: 48px; padding: 0 12px; }
+  .nav-brand { font-size: 0.95rem; }
+  .splash-title-wrap { padding-top: 18vh; }
+  .splash-title { font-size: clamp(1.6rem, 9vw, 2.4rem); }
+  .splash-scroll-cue { bottom: 24px; }
+  .splash-reveal-inner { padding: 0 16px; }
+  .splash-reveal-title { font-size: clamp(1.5rem, 7vw, 2.2rem); }
+  .splash-reveal-subtitle { font-size: 0.75rem; line-height: 1.7; }
+  .splash-reveal-scroll { bottom: 24px; }
+  .pillar-card { padding: 20px 16px; }
+  .pillar-card .metric { font-size: 1.5rem; }
+  .era-card-title { font-size: 1.2rem; }
+  .era-card-overlay { padding: 16px; }
+  .era-figure { width: 44px; height: 44px; }
+  .era-artifact { width: 56px; height: 56px; }
+  .feed-item { grid-template-columns: 1fr; gap: 6px; }
+  .feed-time { padding-top: 0; }
+  .impact-chip { font-size: 0.5rem; padding: 2px 6px; }
+  .sim-header, .analysis-header { margin-bottom: 40px; }
+  .prosperity-score { font-size: 3rem; }
+  .metric-card { padding: 16px; }
+  .metric-card .val { font-size: 1.4rem; }
+  .era-intel-card { padding: 18px 16px; }
+  .era-intel-card-head h4 { font-size: 0.9rem; }
+  .era-intel-period { font-size: 0.5rem; }
+  .ai-briefing-panel, .ai-fragility-panel { padding: 20px 16px; }
+  .ai-briefing-body, .ai-fragility-body { font-size: 0.75rem; }
+  .slider-btns { flex-direction: column; }
+  .data-table { font-size: 0.625rem; }
+  .data-table thead th { padding: 8px 10px; font-size: 0.5rem; }
+  .data-table tbody td { padding: 10px; }
 }
