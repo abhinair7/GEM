@@ -1195,6 +1195,45 @@ function getXTicks(lo, hi) {
   return ticks;
 }
 
+// Draw x-axis labels with auto-thinning and rotation on narrow canvases
+function drawXAxis(ctx, ticks, toX, W, H, pad) {
+  var chartW = W - pad.left - pad.right;
+  var isMobile = chartW < 350;
+  // Estimate label width; thin ticks so they don't overlap
+  var labelW = isMobile ? 32 : 52;
+  var maxTicks = Math.max(2, Math.floor(chartW / labelW));
+  var visible = ticks.filter(function(t) {
+    var tx = toX(t.pos);
+    return tx >= pad.left + 5 && tx <= W - pad.right - 5;
+  });
+  // Evenly thin to maxTicks
+  if (visible.length > maxTicks) {
+    var step = Math.ceil(visible.length / maxTicks);
+    visible = visible.filter(function(_, i) { return i % step === 0; });
+  }
+  var angle = isMobile ? -Math.PI / 5 : 0;  // ~36° rotation on mobile
+  visible.forEach(function(t) {
+    var tx = toX(t.pos);
+    // Grid line
+    ctx.beginPath(); ctx.moveTo(tx, H - pad.bottom); ctx.lineTo(tx, pad.top);
+    ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
+    // Label
+    ctx.fillStyle = '#a3a8a0';
+    if (angle) {
+      ctx.save();
+      ctx.translate(tx, H - pad.bottom + 14);
+      ctx.rotate(angle);
+      ctx.textAlign = 'right';
+      ctx.font = '400 8px Inter';
+      ctx.fillText(t.label, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.textAlign = 'center';
+      ctx.fillText(t.label, tx, H - pad.bottom + 16);
+    }
+  });
+}
+
 // =========================================================
 // CHART TYPE 1: GROUPED BAR CHART (for GDP)
 // =========================================================
@@ -1351,15 +1390,7 @@ function drawAreaChart(canvasId, datasets, options = {}) {
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
   }
   // X labels
-  ctx.textAlign = 'center';
-  getXTicks(minYear, maxYear).forEach(function(t) {
-    var tx = toX(t.pos);
-    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
-      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
-      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
-    }
-  });
+  drawXAxis(ctx, getXTicks(minYear, maxYear), toX, W, H, pad);
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1428,15 +1459,7 @@ function drawBarChart(canvasId, datasets, options = {}) {
     ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
   }
-  ctx.textAlign = 'center';
-  getXTicks(minYear, maxYear).forEach(function(t) {
-    var tx = toX(t.pos);
-    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
-      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
-      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
-    }
-  });
+  drawXAxis(ctx, getXTicks(minYear, maxYear), toX, W, H, pad);
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1517,15 +1540,7 @@ function drawLollipopChart(canvasId, datasets, options = {}) {
     ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
   }
-  ctx.textAlign = 'center';
-  getXTicks(minYear, maxYear).forEach(function(t) {
-    var tx = toX(t.pos);
-    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
-      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
-      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
-    }
-  });
+  drawXAxis(ctx, getXTicks(minYear, maxYear), toX, W, H, pad);
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1615,15 +1630,7 @@ function drawDotPlot(canvasId, datasets, options = {}) {
     ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(3), pad.left-8, y+3);
   }
-  ctx.textAlign = 'center';
-  getXTicks(minYear, maxYear).forEach(function(t) {
-    var tx = toX(t.pos);
-    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
-      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
-      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
-    }
-  });
+  drawXAxis(ctx, getXTicks(minYear, maxYear), toX, W, H, pad);
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1713,15 +1720,7 @@ function drawSteppedArea(canvasId, datasets, options = {}) {
     ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
   }
-  ctx.textAlign = 'center';
-  getXTicks(minYear, maxYear).forEach(function(t) {
-    var tx = toX(t.pos);
-    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
-      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
-      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
-    }
-  });
+  drawXAxis(ctx, getXTicks(minYear, maxYear), toX, W, H, pad);
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1833,15 +1832,7 @@ function drawSpreadChart(canvasId, data, options) {
     if (Math.abs(v) > 0.01) ctx.fillText((v > 0 ? '+' : '') + v.toFixed(1) + '%', pad.left - 8, y + 3);
   }
   // X-axis ticks
-  ctx.textAlign = 'center';
-  getXTicks(minYear, maxYear).forEach(function(t) {
-    var gx = toX(t.pos);
-    if (gx >= pad.left && gx <= pad.left + cw) {
-      ctx.beginPath(); ctx.moveTo(gx, pad.top); ctx.lineTo(gx, pad.top + ch);
-      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, gx, H - pad.bottom + 16);
-    }
-  });
+  drawXAxis(ctx, getXTicks(minYear, maxYear), toX, W, H, pad);
   // Axes
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ch); ctx.lineTo(pad.left + cw, pad.top + ch); ctx.stroke();
