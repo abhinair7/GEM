@@ -354,9 +354,13 @@ section { position: relative; z-index: 2; min-height: 100vh; padding: 120px 48px
 .feed-header-right { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--outline); text-align: right; }
 .feed-source-tag { display: inline-block; padding: 2px 8px; background: rgba(45,110,95,0.1); color: var(--tertiary); font-size: 0.5625rem; letter-spacing: 0.08em; margin-top: 4px; }
 .feed-layout { display: grid; grid-template-columns: 7fr 5fr; gap: 24px; }
-.feed-stream { display: flex; flex-direction: column; gap: 2px; max-height: 560px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--surface-high) transparent; }
-.feed-item { display: grid; grid-template-columns: 80px 1fr auto; gap: 16px; padding: 18px 20px; background: var(--surface); align-items: start; cursor: pointer; transition: background 0.3s; opacity: 0; transform: translateX(-20px); }
-.feed-item:hover { background: var(--surface-high); }
+.feed-stream { display: flex; flex-direction: column; gap: 2px; max-height: 560px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: var(--surface-high) transparent; scroll-behavior: smooth; will-change: scroll-position; }
+.feed-stream::-webkit-scrollbar { width: 4px; }
+.feed-stream::-webkit-scrollbar-thumb { background: var(--surface-high); border-radius: 2px; }
+.feed-item { display: grid; grid-template-columns: 80px 1fr auto; gap: 16px; padding: 18px 20px; background: var(--surface); align-items: start; cursor: pointer; opacity: 0; transform: translateY(16px); animation: feedSlideIn 0.5s cubic-bezier(0.25,0.46,0.45,0.94) forwards; animation-play-state: paused; }
+.feed-item.visible { animation-play-state: running; }
+@keyframes feedSlideIn { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
+.feed-item:hover { background: var(--surface-high); transition: background 0.3s; }
 .feed-item.active { background: var(--surface-high); border-left: 2px solid var(--error); }
 .feed-item.gdelt-live { border-left: 2px solid var(--tertiary); }
 .feed-time { font-size: 0.625rem; letter-spacing: 0.1em; color: var(--outline); padding-top: 2px; font-variant-numeric: tabular-nums; }
@@ -727,7 +731,7 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .feed-header { flex-direction: column; align-items: flex-start; gap: 12px; }
   .feed-item { grid-template-columns: 60px 1fr; gap: 10px; padding: 14px 16px; }
   .feed-impact { flex-direction: row; flex-wrap: wrap; align-items: center; }
-  .feed-stream { max-height: 420px; }
+  .feed-stream { max-height: 400px; }
   .era-intel-grid { grid-template-columns: 1fr; }
   #livefeed { padding-top: 100px; padding-bottom: 100px; }
   #eras, #simulation, #analysis { padding-top: 100px; padding-bottom: 100px; }
@@ -781,6 +785,8 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .era-artifact { width: 56px; height: 56px; }
   .feed-item { grid-template-columns: 1fr; gap: 6px; }
   .feed-time { padding-top: 0; }
+  .feed-stream { max-height: 320px; }
+  .feed-impact { display: none; }
   .impact-chip { font-size: 0.5rem; padding: 2px 6px; }
   .sim-header, .analysis-header { margin-bottom: 40px; }
   .prosperity-score { font-size: 3rem; }

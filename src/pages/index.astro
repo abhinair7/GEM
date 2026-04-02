@@ -745,7 +745,10 @@ function addFeedItem(time, title, desc, impacts, isLive, url) {
   const linkHTML = url ? '<a href="'+url+'" target="_blank" rel="noopener">Source &rarr;</a>' : '';
   item.innerHTML = '<div class="feed-time">'+time+'</div><div class="feed-content"><h4>'+title+'</h4><p>'+desc+'</p>'+linkHTML+'</div><div class="feed-impact">'+impHTML+'</div>';
   stream.prepend(item);
-  requestAnimationFrame(() => { item.style.transition = 'opacity 0.6s, transform 0.6s'; item.style.opacity = '1'; item.style.transform = 'translateX(0)'; });
+  // Trigger the CSS animation after a microtask so the browser registers the initial state
+  requestAnimationFrame(() => { requestAnimationFrame(() => { item.classList.add('visible'); }); });
+  // Auto-scroll feed to top smoothly
+  stream.scrollTo({ top: 0, behavior: 'smooth' });
   impacts.forEach(imp => { feedState[imp.pillar] += imp.delta; });
   updateFeedMeters();
   document.getElementById('feed-timestamp').textContent = time;
@@ -808,9 +811,9 @@ function loadFallback() {
     const ev = fallbackEvents[idx];
     addFeedItem(ev.time, ev.title, ev.desc, ev.impacts, false);
     idx++;
-    if (idx < fallbackEvents.length) setTimeout(drip, 3000);
+    if (idx < fallbackEvents.length) setTimeout(drip, 2200);
   }
-  drip(); setTimeout(drip, 600);
+  drip();
 }
 
 let feedStarted = false;
