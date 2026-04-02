@@ -154,33 +154,33 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
 .splash-orbit {
   display: none;
   position: absolute;
-  bottom: 8vh;
+  bottom: 16vh;
   left: 0;
   right: 0;
   z-index: 4;
   text-align: center;
-  perspective: 900px;
+  perspective: 1000px;
 }
 .splash-orbit-title {
   display: inline-block;
   font-family: 'Newsreader', serif;
   font-weight: 300;
-  font-size: clamp(2rem, 9vw, 3.4rem);
-  line-height: 1.1;
+  font-size: clamp(2.2rem, 10vw, 3.6rem);
+  line-height: 1.15;
   letter-spacing: -0.02em;
   color: #fff;
   text-shadow: 0 2px 30px rgba(0,0,0,0.5);
-  animation: titleSway 8s ease-in-out infinite;
+  animation: titleSpin 20s linear infinite;
   transform-style: preserve-3d;
 }
 .splash-orbit-title em {
   font-style: italic;
-  color: rgba(197,160,89,0.85);
+  font-weight: 300;
+  color: rgba(255,255,255,0.8);
 }
-@keyframes titleSway {
-  0%   { transform: rotateY(-18deg) rotateX(2deg); }
-  50%  { transform: rotateY(18deg) rotateX(-2deg); }
-  100% { transform: rotateY(-18deg) rotateX(2deg); }
+@keyframes titleSpin {
+  0%   { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
 }
 
 /* ========== SECTIONS ========== */
