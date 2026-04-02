@@ -118,15 +118,6 @@ export const eraCards = [
   { key: 'nineties', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=80', date: '1990s Global', title: 'The Information Age', pillars: 'Globalisation, multilateral sanctions, info warfare', winner: 'Winning Layer: Global Technocrats', figure: '/figures/nineties.jpg', figureName: 'The Network Architect', symbol: 'The Fiber Optic Web', symbolDesc: 'Technological Acceleration & Information Warfare' },
 ];
 
-export const bgArtifactImages = [
-  { src: 'https://images.unsplash.com/photo-1564399263809-d2e6f6f0431a?w=500&q=70', era: 'romana' },
-  { src: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=500&q=70', era: 'song' },
-  { src: 'https://images.unsplash.com/photo-1541370976299-4d24ebbc9077?w=500&q=70', era: 'renaissance' },
-  { src: 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25?w=500&q=70', era: 'twenties' },
-  { src: 'https://images.unsplash.com/photo-1569317002804-ab77bcf1bce4?w=500&q=70', era: 'golden' },
-  { src: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=500&q=70', era: 'nineties' },
-];
-
 export const fragilityCards = [
   { era: 'Pax Romana', label: 'Classical Imperial', desc: "Trade route brittleness — prosperity collapses if maritime security degrades. Over-reliance on military spending creates fiscal fragility." },
   { era: 'Song Dynasty', label: 'Feudal Innovation', desc: 'Zero military scalability — economic gains cannot compensate for existential security threats. Innovation without force projection invites conquest.' },

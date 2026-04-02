@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { bgArtifactImages, eraCards, historicalData } from '../data/eras';
+import { eraCards, historicalData } from '../data/eras';
 import '../styles/global.css';
 
 export const prerender = true; // This page is static (hybrid mode)
@@ -114,12 +114,6 @@ const eraArtifacts: Record<string, string> = {
 
 <BaseLayout title="GEM — Geopolitical Equilibrium Model">
 
-<!-- Background Artifacts -->
-<div class="bg-artifacts">
-  {bgArtifactImages.map((img) => (
-    <img class="bg-artifact" src={img.src} alt="" data-era={img.era} />
-  ))}
-</div>
 <div class="grid-overlay"></div>
 
 <!-- Navigation -->
@@ -615,16 +609,7 @@ function euclideanDist(a, b) {
   return Math.sqrt((a.trade-b.trade)**2 + (a.politics-b.politics)**2 + (a.security-b.security)**2 + (a.benefit-b.benefit)**2);
 }
 
-// =========================================================
-// FLOATING ARTIFACTS
-// =========================================================
-const bgArtifacts = document.querySelectorAll('.bg-artifact');
-bgArtifacts.forEach((art, i) => setTimeout(() => art.classList.add('active'), 600 + i * 350));
-function highlightEraArtifact(k) { bgArtifacts.forEach(a => { a.classList.toggle('highlight', a.dataset.era === k); }); }
-document.addEventListener('mousemove', e => {
-  const mx = (e.clientX/innerWidth - 0.5)*2, my = (e.clientY/innerHeight - 0.5)*2;
-  bgArtifacts.forEach((a, i) => { const d = 0.4+(i%3)*0.25; a.style.marginLeft = (mx*15*d)+'px'; a.style.marginTop = (my*10*d)+'px'; });
-});
+
 
 // =========================================================
 // GSAP ANIMATIONS
@@ -730,7 +715,6 @@ function updateFeedMeters() {
   for (const [e,pr] of Object.entries(eraProfiles)) { const d = euclideanDist(vals,pr); if (d<bd){bd=d;best=e;} }
   document.getElementById('feed-era-name').textContent = eraInfo[best].name;
   document.getElementById('feed-era-sub').textContent = eraInfo[best].date;
-  highlightEraArtifact(best);
   return vals;
 }
 
@@ -873,7 +857,6 @@ function calculate() {
   document.getElementById('playbook-title').textContent = info.playbook;
   document.getElementById('playbook-grid').innerHTML = info.strategies.map(s => '<div class="playbook-item"><h5>'+s.title+'</h5><p>'+s.desc+'</p></div>').join('');
   document.querySelectorAll('.era-card').forEach(c => { c.style.outline = c.dataset.era===bestEra ? '1px solid var(--secondary-light)' : 'none'; });
-  highlightEraArtifact(bestEra);
 
   drawRadar(input, bestEra);
   drawScatter(input, bestEra);
