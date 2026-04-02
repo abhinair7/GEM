@@ -40,9 +40,10 @@ function parseFredCsv(csv: string): Array<{ year: number; value: number; date: s
     .reduce((arr: Array<{ year: number; value: number; date: string }>, line: string) => {
       const [dateStr, valStr] = line.split(',');
       if (valStr && valStr !== '.' && !isNaN(parseFloat(valStr))) {
-        const [y, m] = dateStr.split('-').map(Number);
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const dim = new Date(y, m, 0).getDate();
         arr.push({
-          year: +(y + (m - 1) / 12).toFixed(6),
+          year: +(y + (m - 1 + (d - 1) / dim) / 12).toFixed(6),
           value: parseFloat(valStr),
           date: dateStr,
         });
@@ -53,19 +54,26 @@ function parseFredCsv(csv: string): Array<{ year: number; value: number; date: s
 }
 
 async function fetchSeries(id: string): Promise<Array<{ year: number; value: number; date: string }>> {
-  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=2020-01-01&coed=2026-12-31&fq=Monthly&fam=avg`;
-  const resp = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'text/csv,text/plain,*/*',
-    },
-  });
-  if (!resp.ok) throw new Error(`FRED HTTP ${resp.status} for ${id}`);
-  const text = await resp.text();
-  if (text.startsWith('<!') || text.includes('<html')) {
-    throw new Error(`Got HTML instead of CSV for ${id}`);
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=2020-01-01&coed=2026-12-31`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000); // 8s timeout
+  try {
+    const resp = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/csv,text/plain,*/*',
+      },
+    });
+    if (!resp.ok) throw new Error(`FRED HTTP ${resp.status} for ${id}`);
+    const text = await resp.text();
+    if (text.startsWith('<!') || text.includes('<html')) {
+      throw new Error(`Got HTML instead of CSV for ${id}`);
+    }
+    return parseFredCsv(text);
+  } finally {
+    clearTimeout(timer);
   }
-  return parseFredCsv(text);
 }
 
 export const GET: APIRoute = async ({ request }) => {

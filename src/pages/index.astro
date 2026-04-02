@@ -357,50 +357,86 @@ const eraArtifacts: Record<string, string> = {
   <div class="analysis-header" style="margin-top:1.5rem;">
     <div class="section-overline reveal">Live Empirical Data</div>
     <h2 class="reveal">Real-World Economic Intelligence</h2>
-    <p class="reveal">Six live datasets fetched in real-time from the Federal Reserve Economic Data (FRED) API via serverless proxy. ~400 monthly observations rendered across six financial indicators — zero hardcoded values, all sourced live from the Federal Reserve.</p>
+    <p class="reveal">Six live datasets streamed in real-time via serverless proxy from the Federal Reserve Economic Data (FRED) API — daily frequency, interactive time ranges, zero hardcoded values.</p>
   </div>
 
   <div class="analysis-grid">
     <div class="chart-panel reveal">
-      <div class="chart-panel-title">U.S. Dollar Strength — Trade-Weighted Index (2020–Present)</div>
-      <div class="chart-panel-sub">Broad trade-weighted U.S. dollar index against major currencies. Rising = stronger dollar, greater economic leverage. Source: FRED (DTWEXBGS).</div>
-      <div class="real-chart-status" id="dollar-status">⟳ Fetching FRED data…</div>
+      <div class="chart-panel-title">U.S. Dollar Strength — Trade-Weighted Index</div>
+      <div class="chart-panel-sub">Daily trade-weighted U.S. dollar index against major currencies. Rising = stronger dollar. Source: FRED (DTWEXBGS).</div>
+      <div class="chart-live-bar">
+        <div class="real-chart-status" id="dollar-status">⟳ Fetching live data…</div>
+        <div class="chart-latest" id="dollar-latest"></div>
+      </div>
+      <div class="chart-range-btns" data-chart="dollar">
+        <button class="range-btn" data-range="1m">1M</button><button class="range-btn" data-range="3m">3M</button><button class="range-btn" data-range="6m">6M</button><button class="range-btn active" data-range="1y">1Y</button><button class="range-btn" data-range="all">ALL</button>
+      </div>
       <canvas id="dollar-chart" width="1100" height="440"></canvas>
     </div>
     <div class="chart-panel reveal">
-      <div class="chart-panel-title">Gold Mining Output Price Index — Safe-Haven Demand (2020–Present)</div>
-      <div class="chart-panel-sub">Producer Price Index for gold ore mining — tracks gold market value at source. Spikes correlate with geopolitical crises, central bank accumulation, and sanctions-driven de-dollarisation. Source: FRED (PCU21222122).</div>
-      <div class="real-chart-status" id="gold-status">⟳ Fetching FRED data…</div>
+      <div class="chart-panel-title">Gold Mining Output Price Index — Safe-Haven Demand</div>
+      <div class="chart-panel-sub">Producer Price Index for gold ore mining — tracks gold market value at source. Spikes = geopolitical crises or central bank accumulation. Source: FRED (PCU21222122).</div>
+      <div class="chart-live-bar">
+        <div class="real-chart-status" id="gold-status">⟳ Fetching live data…</div>
+        <div class="chart-latest" id="gold-latest"></div>
+      </div>
+      <div class="chart-range-btns" data-chart="gold">
+        <button class="range-btn" data-range="1m">1M</button><button class="range-btn" data-range="3m">3M</button><button class="range-btn" data-range="6m">6M</button><button class="range-btn active" data-range="1y">1Y</button><button class="range-btn" data-range="all">ALL</button>
+      </div>
       <canvas id="gold-chart" width="1100" height="440"></canvas>
     </div>
   </div>
 
   <div class="chart-panel analysis-full reveal">
-    <div class="chart-panel-title">Brent Crude Oil — Energy Market Volatility (2020–Present)</div>
-    <div class="chart-panel-sub">Monthly averaged Brent crude prices. Every major price shock correlates with Middle East geopolitical events. Source: FRED (DCOILBRENTEU).</div>
-    <div class="real-chart-status" id="oil-status">⟳ Fetching FRED data…</div>
+    <div class="chart-panel-title">Brent Crude Oil — Energy Market Volatility</div>
+    <div class="chart-panel-sub">Daily Brent crude prices. Every major price shock correlates with geopolitical events. Source: FRED (DCOILBRENTEU).</div>
+    <div class="chart-live-bar">
+      <div class="real-chart-status" id="oil-status">⟳ Fetching live data…</div>
+      <div class="chart-latest" id="oil-latest"></div>
+    </div>
+    <div class="chart-range-btns" data-chart="oil">
+      <button class="range-btn" data-range="1m">1M</button><button class="range-btn" data-range="3m">3M</button><button class="range-btn" data-range="6m">6M</button><button class="range-btn active" data-range="1y">1Y</button><button class="range-btn" data-range="all">ALL</button>
+    </div>
     <canvas id="oil-chart" width="1100" height="420"></canvas>
   </div>
 
   <div class="analysis-grid">
     <div class="chart-panel reveal">
-      <div class="chart-panel-title">Treasury Yield Spread — Recession Risk (2020–Present)</div>
-      <div class="chart-panel-sub">10-Year minus 2-Year Treasury rate. Negative = inverted yield curve = recession signal. The most reliable macro early-warning indicator. Source: FRED (T10Y2Y).</div>
-      <div class="real-chart-status" id="treasury-status">⟳ Fetching FRED data…</div>
+      <div class="chart-panel-title">Treasury Yield Spread — Recession Risk</div>
+      <div class="chart-panel-sub">Daily 10Y minus 2Y Treasury rate. Negative = inverted yield curve = recession signal. Source: FRED (T10Y2Y).</div>
+      <div class="chart-live-bar">
+        <div class="real-chart-status" id="treasury-status">⟳ Fetching live data…</div>
+        <div class="chart-latest" id="treasury-latest"></div>
+      </div>
+      <div class="chart-range-btns" data-chart="treasury">
+        <button class="range-btn" data-range="1m">1M</button><button class="range-btn" data-range="3m">3M</button><button class="range-btn" data-range="6m">6M</button><button class="range-btn active" data-range="1y">1Y</button><button class="range-btn" data-range="all">ALL</button>
+      </div>
       <canvas id="treasury-chart" width="1100" height="440"></canvas>
     </div>
     <div class="chart-panel reveal">
-      <div class="chart-panel-title">CBOE Volatility Index (VIX) — Market Fear Gauge (2020–Present)</div>
-      <div class="chart-panel-sub">Lollipop spike chart — each stem represents a monthly reading. Dots above the "calm zone" (VIX &gt; 20) signal geopolitical or market stress events. Source: FRED (VIXCLS).</div>
-      <div class="real-chart-status" id="vix-status">⟳ Fetching FRED data…</div>
+      <div class="chart-panel-title">CBOE Volatility Index (VIX) — Market Fear Gauge</div>
+      <div class="chart-panel-sub">Lollipop spike chart — each stem is a daily reading. Spikes above the calm zone (VIX > 20) signal market stress. Source: FRED (VIXCLS).</div>
+      <div class="chart-live-bar">
+        <div class="real-chart-status" id="vix-status">⟳ Fetching live data…</div>
+        <div class="chart-latest" id="vix-latest"></div>
+      </div>
+      <div class="chart-range-btns" data-chart="vix">
+        <button class="range-btn" data-range="1m">1M</button><button class="range-btn" data-range="3m">3M</button><button class="range-btn" data-range="6m">6M</button><button class="range-btn active" data-range="1y">1Y</button><button class="range-btn" data-range="all">ALL</button>
+      </div>
       <canvas id="vix-chart" width="1100" height="440"></canvas>
     </div>
   </div>
 
   <div class="chart-panel analysis-full reveal">
-    <div class="chart-panel-title">USD/EUR Exchange Rate — Currency Hegemony (2020–Present)</div>
-    <div class="chart-panel-sub">Dot plot with 12-month moving average trend line. Each dot is a monthly rate; the bold line reveals structural shifts in dollar hegemony. Source: FRED (DEXUSEU).</div>
-    <div class="real-chart-status" id="forex-status">⟳ Fetching FRED data…</div>
+    <div class="chart-panel-title">USD/EUR Exchange Rate — Currency Hegemony</div>
+    <div class="chart-panel-sub">Daily rate with moving average trend line. Each dot is a reading; the bold line reveals structural currency shifts. Source: FRED (DEXUSEU).</div>
+    <div class="chart-live-bar">
+      <div class="real-chart-status" id="forex-status">⟳ Fetching live data…</div>
+      <div class="chart-latest" id="forex-latest"></div>
+    </div>
+    <div class="chart-range-btns" data-chart="forex">
+      <button class="range-btn" data-range="1m">1M</button><button class="range-btn" data-range="3m">3M</button><button class="range-btn" data-range="6m">6M</button><button class="range-btn active" data-range="1y">1Y</button><button class="range-btn" data-range="all">ALL</button>
+    </div>
     <canvas id="forex-chart" width="1100" height="420"></canvas>
   </div>
 
@@ -1140,6 +1176,30 @@ document.querySelectorAll('.era-artifact').forEach((artifact, i) => {
 // REAL DATA CHARTS — World Bank API + FRED
 // =========================================================
 
+// Smart X-axis tick generator — adapts labels to any date range
+var _MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function getXTicks(lo, hi) {
+  var range = hi - lo, ticks = [], y, m, p;
+  if (range > 4) {
+    var step = range > 50 ? 10 : range > 25 ? 5 : 2;
+    for (y = Math.ceil(lo / step) * step; y <= hi; y += step)
+      ticks.push({ pos: y, label: String(y) });
+  } else if (range > 1.5) {
+    for (y = Math.floor(lo); y <= Math.ceil(hi); y++)
+      for (m = 0; m < 12; m += 3) { p = y + m / 12; if (p >= lo - 0.05 && p <= hi + 0.05) ticks.push({ pos: p, label: _MO[m] + " '" + String(y % 100).padStart(2, '0') }); }
+  } else if (range > 0.4) {
+    for (y = Math.floor(lo); y <= Math.ceil(hi); y++)
+      for (m = 0; m < 12; m++) { p = y + m / 12; if (p >= lo - 0.02 && p <= hi + 0.02) ticks.push({ pos: p, label: _MO[m] + " '" + String(y % 100).padStart(2, '0') }); }
+  } else if (range > 0.15) {
+    for (y = Math.floor(lo); y <= Math.ceil(hi); y++)
+      for (m = 0; m < 12; m++) for (var h = 0; h < 2; h++) { p = y + (m + h * 0.5) / 12; if (p >= lo - 0.01 && p <= hi + 0.01) ticks.push({ pos: p, label: _MO[m] + ' ' + (h ? '15' : '1') }); }
+  } else {
+    for (y = Math.floor(lo); y <= Math.ceil(hi); y++)
+      for (m = 0; m < 12; m++) for (var w = 0; w < 5; w++) { var d = w * 7 + 1; if (d > 28) continue; p = y + (m + (d - 1) / 30) / 12; if (p >= lo - 0.005 && p <= hi + 0.005) ticks.push({ pos: p, label: _MO[m] + ' ' + d }); }
+  }
+  return ticks;
+}
+
 // =========================================================
 // CHART TYPE 1: GROUPED BAR CHART (for GDP)
 // =========================================================
@@ -1296,12 +1356,15 @@ function drawAreaChart(canvasId, datasets, options = {}) {
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
   }
   // X labels
-  ctx.textAlign = 'center'; const xInt = yearRange > 50 ? 10 : yearRange > 25 ? 5 : 2;
-  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
-    ctx.beginPath(); ctx.moveTo(toX(yr), H-pad.bottom); ctx.lineTo(toX(yr), pad.top);
-    ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.stroke();
-    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
-  }
+  ctx.textAlign = 'center';
+  getXTicks(minYear, maxYear).forEach(function(t) {
+    var tx = toX(t.pos);
+    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
+      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
+      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
+    }
+  });
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1371,10 +1434,14 @@ function drawBarChart(canvasId, datasets, options = {}) {
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
   }
   ctx.textAlign = 'center';
-  const xInt = yearRange > 30 ? 5 : yearRange > 15 ? 2 : 1;
-  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
-    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
-  }
+  getXTicks(minYear, maxYear).forEach(function(t) {
+    var tx = toX(t.pos);
+    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
+      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
+      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
+    }
+  });
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1456,10 +1523,14 @@ function drawLollipopChart(canvasId, datasets, options = {}) {
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
   }
   ctx.textAlign = 'center';
-  const xInt = yearRange > 30 ? 5 : yearRange > 15 ? 2 : 1;
-  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
-    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
-  }
+  getXTicks(minYear, maxYear).forEach(function(t) {
+    var tx = toX(t.pos);
+    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
+      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
+      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
+    }
+  });
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1550,16 +1621,20 @@ function drawDotPlot(canvasId, datasets, options = {}) {
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(3), pad.left-8, y+3);
   }
   ctx.textAlign = 'center';
-  const xInt = yearRange > 30 ? 5 : yearRange > 15 ? 2 : 1;
-  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
-    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
-  }
+  getXTicks(minYear, maxYear).forEach(function(t) {
+    var tx = toX(t.pos);
+    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
+      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
+      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
+    }
+  });
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
 
-  // Moving average trend line (12-month)
-  const windowSize = Math.min(12, Math.floor(sorted.length / 3));
+  // Moving average trend line (adaptive window)
+  const windowSize = Math.min(22, Math.max(5, Math.floor(sorted.length / 12)));
   if (windowSize >= 2) {
     ctx.beginPath();
     let first = true;
@@ -1598,12 +1673,13 @@ function drawDotPlot(canvasId, datasets, options = {}) {
   }
 
   // Legend
+  var _freq = sorted.length > 100 ? 'Daily' : 'Monthly';
   ctx.font = '500 9px Inter'; ctx.fillStyle = ds.color; ctx.textAlign = 'left';
   ctx.beginPath(); ctx.arc(pad.left+10, H-10, 3, 0, Math.PI*2); ctx.fill();
-  ctx.fillText('Monthly rate', pad.left+20, H-7);
-  ctx.beginPath(); ctx.moveTo(pad.left+110, H-10); ctx.lineTo(pad.left+140, H-10);
+  ctx.fillText(_freq + ' rate', pad.left+20, H-7);
+  ctx.beginPath(); ctx.moveTo(pad.left+100, H-10); ctx.lineTo(pad.left+130, H-10);
   ctx.strokeStyle = ds.color; ctx.lineWidth = 3; ctx.stroke();
-  ctx.fillText('12-mo moving avg', pad.left+146, H-7);
+  ctx.fillText('Moving avg', pad.left+136, H-7);
 
   if (options.yLabel) {
     ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2);
@@ -1642,13 +1718,15 @@ function drawSteppedArea(canvasId, datasets, options = {}) {
     ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
     ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
   }
-  const xInt = yearRange > 30 ? 5 : yearRange > 15 ? 2 : 1;
   ctx.textAlign = 'center';
-  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
-    ctx.beginPath(); ctx.moveTo(toX(yr), H-pad.bottom); ctx.lineTo(toX(yr), pad.top);
-    ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.stroke();
-    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
-  }
+  getXTicks(minYear, maxYear).forEach(function(t) {
+    var tx = toX(t.pos);
+    if (tx >= pad.left + 5 && tx <= W - pad.right - 5) {
+      ctx.beginPath(); ctx.moveTo(tx, H-pad.bottom); ctx.lineTo(tx, pad.top);
+      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, tx, H-pad.bottom+16);
+    }
+  });
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
@@ -1761,14 +1839,14 @@ function drawSpreadChart(canvasId, data, options) {
   }
   // X-axis ticks
   ctx.textAlign = 'center';
-  for (var yr = Math.ceil(minYear); yr <= Math.floor(maxYear) + 1; yr++) {
-    var gx = toX(yr);
+  getXTicks(minYear, maxYear).forEach(function(t) {
+    var gx = toX(t.pos);
     if (gx >= pad.left && gx <= pad.left + cw) {
       ctx.beginPath(); ctx.moveTo(gx, pad.top); ctx.lineTo(gx, pad.top + ch);
       ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), gx, H - pad.bottom + 16);
+      ctx.fillStyle = '#a3a8a0'; ctx.fillText(t.label, gx, H - pad.bottom + 16);
     }
-  }
+  });
   // Axes
   ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ch); ctx.lineTo(pad.left + cw, pad.top + ch); ctx.stroke();
@@ -1869,12 +1947,71 @@ function mobileEvents(events, max) {
 // LIVE FRED DATA — fetched from /api/fred serverless function
 // =========================================================
 var FRED_DOLLAR = [], FRED_GOLD = [], FRED_OIL = [], FRED_TREASURY = [], FRED_VIX = [], FRED_FOREX = [];
+var _fullData = {};
+var _ranges = {};
+var CHART_REDRAW = {};
 
-function loadDollarChart(src, srcLabel) {
-  var data = _isMobile ? thinData(src, 30) : src;
-  if (!data || !data.length) { setStatus('dollar-status', '✗ No dollar data available', 'error'); return; }
-  FRED_DOLLAR = src; _chartData.dollar = data;
-  setStatus('dollar-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Trade-Weighted Dollar Index', 'loaded');
+// Value formatters for the latest-value badge
+var LATEST_FMT = {
+  dollar: function(v) { return v.toFixed(1); },
+  gold: function(v) { return v.toFixed(0); },
+  oil: function(v) { return '$' + v.toFixed(2); },
+  treasury: function(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; },
+  vix: function(v) { return v.toFixed(1); },
+  forex: function(v) { return v.toFixed(4); }
+};
+
+function filterByRange(data, range) {
+  if (!data || !data.length || range === 'all') return data;
+  var latest = data[data.length - 1].year;
+  var months = { '1m': 1, '3m': 3, '6m': 6, '1y': 12 }[range] || 12;
+  var cutoff = latest - months / 12;
+  return data.filter(function(d) { return d.year >= cutoff; });
+}
+
+function updateLatest(elId, data, fmt) {
+  var el = document.getElementById(elId);
+  if (!el || !data || !data.length) return;
+  var last = data[data.length - 1];
+  var prev = data.length > 1 ? data[data.length - 2] : last;
+  var change = last.value - prev.value;
+  var pct = prev.value !== 0 ? ((change / prev.value) * 100) : 0;
+  var arrow = change >= 0 ? '▲' : '▼';
+  var color = change >= 0 ? '#2d6e5f' : '#c4442d';
+  var valStr = fmt ? fmt(last.value) : last.value.toFixed(2);
+  el.innerHTML = '<span class="latest-pulse"></span>' +
+    '<strong>' + valStr + '</strong> ' +
+    '<span style="color:' + color + ';font-size:10px">' + arrow + ' ' + (change >= 0 ? '+' : '') + pct.toFixed(1) + '%</span> ' +
+    '<span class="latest-date">' + last.date + '</span>';
+}
+
+function setChartRange(name, range) {
+  _ranges[name] = range;
+  // Update button state immediately
+  document.querySelectorAll('.chart-range-btns[data-chart="' + name + '"] .range-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.range === range);
+  });
+  var full = _fullData[name];
+  if (!full || !full.length) return;
+  var filtered = filterByRange(full, range);
+  var data = _isMobile ? thinData(filtered, 50) : filtered;
+  _chartData[name] = data;
+  if (CHART_REDRAW[name]) CHART_REDRAW[name](data);
+  updateLatest(name + '-latest', full, LATEST_FMT[name]);
+}
+
+// Delegated click handler for time-range buttons
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.range-btn');
+  if (!btn) return;
+  var wrap = btn.closest('.chart-range-btns');
+  if (!wrap) return;
+  setChartRange(wrap.dataset.chart, btn.dataset.range);
+});
+
+// --- CHART DRAW WRAPPERS (called by loaders + range buttons) ---
+
+function _drawDollar(data) {
   drawAreaChart('dollar-chart', [
     { label: 'USD Index', data: data, color: '#44474e' }
   ], {
@@ -1888,12 +2025,9 @@ function loadDollarChart(src, srcLabel) {
     ], 2)
   });
 }
+CHART_REDRAW.dollar = _drawDollar;
 
-function loadGoldChart(src, srcLabel) {
-  var data = _isMobile ? thinData(src, 30) : src;
-  if (!data || !data.length) { setStatus('gold-status', '✗ No gold data available', 'error'); return; }
-  FRED_GOLD = src; _chartData.gold = data;
-  setStatus('gold-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Gold Mining PPI', 'loaded');
+function _drawGold(data) {
   drawBarChart('gold-chart', [
     { label: 'Gold PPI', data: data, color: '#8b6914' }
   ], {
@@ -1907,12 +2041,9 @@ function loadGoldChart(src, srcLabel) {
     ], 2)
   });
 }
+CHART_REDRAW.gold = _drawGold;
 
-function loadOilChart(src, srcLabel) {
-  var data = _isMobile ? thinData(src, 30) : src;
-  if (!data || !data.length) { setStatus('oil-status', '✗ No oil data available', 'error'); return; }
-  FRED_OIL = src; _chartData.oil = data;
-  setStatus('oil-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Brent Crude Oil', 'loaded');
+function _drawOil(data) {
   drawSteppedArea('oil-chart', [
     { label: 'Brent Crude ($/bbl)', data: data, color: '#2d6e5f' }
   ], {
@@ -1926,12 +2057,9 @@ function loadOilChart(src, srcLabel) {
     ], 2)
   });
 }
+CHART_REDRAW.oil = _drawOil;
 
-function loadTreasuryChart(src, srcLabel) {
-  var data = _isMobile ? thinData(src, 30) : src;
-  if (!data || !data.length) { setStatus('treasury-status', '✗ No treasury data available', 'error'); return; }
-  FRED_TREASURY = src; _chartData.treasury = data;
-  setStatus('treasury-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED 10Y-2Y Treasury Spread', 'loaded');
+function _drawTreasury(data) {
   drawSpreadChart('treasury-chart', data, {
     events: mobileEvents([
       { year: 2022.3, label: 'Curve Inverts' },
@@ -1940,12 +2068,9 @@ function loadTreasuryChart(src, srcLabel) {
     ], 2)
   });
 }
+CHART_REDRAW.treasury = _drawTreasury;
 
-function loadVIXChart(src, srcLabel) {
-  var data = _isMobile ? thinData(src, 30) : src;
-  if (!data || !data.length) { setStatus('vix-status', '✗ No VIX data available', 'error'); return; }
-  FRED_VIX = src; _chartData.vix = data;
-  setStatus('vix-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED CBOE Volatility Index', 'loaded');
+function _drawVIX(data) {
   drawLollipopChart('vix-chart', [
     { label: 'VIX', data: data, color: '#c4442d' }
   ], {
@@ -1960,12 +2085,9 @@ function loadVIXChart(src, srcLabel) {
     ], 2)
   });
 }
+CHART_REDRAW.vix = _drawVIX;
 
-function loadForexChart(src, srcLabel) {
-  var data = _isMobile ? thinData(src, 30) : src;
-  if (!data || !data.length) { setStatus('forex-status', '✗ No forex data available', 'error'); return; }
-  FRED_FOREX = src; _chartData.forex = data;
-  setStatus('forex-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED USD/EUR Exchange Rate', 'loaded');
+function _drawForex(data) {
   drawDotPlot('forex-chart', [
     { label: 'USD/EUR', data: data, color: '#5c4d8b' }
   ], {
@@ -1978,6 +2100,81 @@ function loadForexChart(src, srcLabel) {
       { year: 2024.5, label: 'Rate Cut Divergence' }
     ], 2)
   });
+}
+CHART_REDRAW.forex = _drawForex;
+
+// --- LOADER FUNCTIONS (store full data, apply default range, render) ---
+
+function loadDollarChart(src, srcLabel) {
+  if (!src || !src.length) { setStatus('dollar-status', '✗ No dollar data available', 'error'); return; }
+  _fullData.dollar = src; FRED_DOLLAR = src;
+  var range = _ranges.dollar || '1y';
+  var filtered = filterByRange(src, range);
+  var data = _isMobile ? thinData(filtered, 50) : filtered;
+  _chartData.dollar = data;
+  setStatus('dollar-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Dollar Index', 'loaded');
+  _drawDollar(data);
+  updateLatest('dollar-latest', src, LATEST_FMT.dollar);
+}
+
+function loadGoldChart(src, srcLabel) {
+  if (!src || !src.length) { setStatus('gold-status', '✗ No gold data available', 'error'); return; }
+  _fullData.gold = src; FRED_GOLD = src;
+  var range = _ranges.gold || '1y';
+  var filtered = filterByRange(src, range);
+  var data = _isMobile ? thinData(filtered, 50) : filtered;
+  _chartData.gold = data;
+  setStatus('gold-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Gold Mining PPI', 'loaded');
+  _drawGold(data);
+  updateLatest('gold-latest', src, LATEST_FMT.gold);
+}
+
+function loadOilChart(src, srcLabel) {
+  if (!src || !src.length) { setStatus('oil-status', '✗ No oil data available', 'error'); return; }
+  _fullData.oil = src; FRED_OIL = src;
+  var range = _ranges.oil || '1y';
+  var filtered = filterByRange(src, range);
+  var data = _isMobile ? thinData(filtered, 50) : filtered;
+  _chartData.oil = data;
+  setStatus('oil-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED Brent Crude', 'loaded');
+  _drawOil(data);
+  updateLatest('oil-latest', src, LATEST_FMT.oil);
+}
+
+function loadTreasuryChart(src, srcLabel) {
+  if (!src || !src.length) { setStatus('treasury-status', '✗ No treasury data available', 'error'); return; }
+  _fullData.treasury = src; FRED_TREASURY = src;
+  var range = _ranges.treasury || '1y';
+  var filtered = filterByRange(src, range);
+  var data = _isMobile ? thinData(filtered, 50) : filtered;
+  _chartData.treasury = data;
+  setStatus('treasury-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED 10Y-2Y Spread', 'loaded');
+  _drawTreasury(data);
+  updateLatest('treasury-latest', src, LATEST_FMT.treasury);
+}
+
+function loadVIXChart(src, srcLabel) {
+  if (!src || !src.length) { setStatus('vix-status', '✗ No VIX data available', 'error'); return; }
+  _fullData.vix = src; FRED_VIX = src;
+  var range = _ranges.vix || '1y';
+  var filtered = filterByRange(src, range);
+  var data = _isMobile ? thinData(filtered, 50) : filtered;
+  _chartData.vix = data;
+  setStatus('vix-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED CBOE VIX', 'loaded');
+  _drawVIX(data);
+  updateLatest('vix-latest', src, LATEST_FMT.vix);
+}
+
+function loadForexChart(src, srcLabel) {
+  if (!src || !src.length) { setStatus('forex-status', '✗ No forex data available', 'error'); return; }
+  _fullData.forex = src; FRED_FOREX = src;
+  var range = _ranges.forex || '1y';
+  var filtered = filterByRange(src, range);
+  var data = _isMobile ? thinData(filtered, 50) : filtered;
+  _chartData.forex = data;
+  setStatus('forex-status', '✦ ' + src.length + ' ' + srcLabel + ' observations — FRED USD/EUR', 'loaded');
+  _drawForex(data);
+  updateLatest('forex-latest', src, LATEST_FMT.forex);
 }
 
 // --- AI ERA INTELLIGENCE FLASHCARDS ---
