@@ -196,6 +196,48 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
     0 10px 30px rgba(0,0,0,0.25);
 }
 
+/* ========== SPLASH — 3D ORBIT RING (mobile only) ========== */
+.splash-orbit-ring-wrap {
+  display: none;
+  position: absolute;
+  bottom: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  height: 60px;
+  z-index: 4;
+  perspective: 800px;
+}
+.splash-orbit-ring {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: orbitSpin 22s linear infinite;
+}
+.splash-orbit-word {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-family: 'Newsreader', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  backface-visibility: hidden;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+.splash-orbit-word.gold {
+  color: rgba(197,160,89,0.8);
+}
+.splash-orbit-word.white {
+  color: rgba(255,255,255,0.7);
+}
+@keyframes orbitSpin {
+  0%   { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
 /* ========== SECTIONS ========== */
 section { position: relative; z-index: 2; min-height: 100vh; padding: 120px 48px 80px; }
 
