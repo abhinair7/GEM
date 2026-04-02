@@ -18,6 +18,27 @@ const FRED_FOREX = fredData.forex || [];
 
 console.log(`[BUILD] FRED static data: Dollar=${FRED_DOLLAR.length}, Gold=${FRED_GOLD.length}, Oil=${FRED_OIL.length}, Treasury=${FRED_TREASURY.length}, VIX=${FRED_VIX.length}, Forex=${FRED_FOREX.length}`);
 
+// ── BUILD-TIME NEWS FETCH (GNews blocks browser CORS) ──
+let GNEWS_ARTICLES: any[] = [];
+try {
+  const gnewsKey = GNEWS_API_KEY || '3548eec4eefeecd8bdae9d8f8c29cf2e';
+  const gnewsResp = await fetch(`https://gnews.io/api/v4/search?q=iran+united+states&lang=en&max=8&apikey=${gnewsKey}`);
+  if (gnewsResp.ok) {
+    const gnewsData = await gnewsResp.json();
+    if (gnewsData.articles && gnewsData.articles.length >= 2) {
+      GNEWS_ARTICLES = gnewsData.articles.map((a: any) => ({
+        title: a.title,
+        desc: a.description || a.source?.name || '',
+        url: a.url,
+        time: a.publishedAt
+      }));
+    }
+  }
+} catch (e) {
+  console.error('[BUILD] GNews fetch error:', e);
+}
+console.log(`[BUILD] GNews articles: ${GNEWS_ARTICLES.length}`);
+
 const eraArtifacts: Record<string, string> = {
   romana: `<svg class="era-artifact-svg" viewBox="0 0 60 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M30 4L36 42L30 48L24 42Z" fill="currentColor" opacity="0.25"/>
@@ -430,7 +451,7 @@ const eraArtifacts: Record<string, string> = {
 <!-- =========================================================
      ENGINE SCRIPT — All simulation logic, charts, GDELT feed
      ========================================================= -->
-<script is:inline define:vars={{ CEREBRAS_API_KEY, GNEWS_API_KEY, FRED_DOLLAR, FRED_GOLD, FRED_OIL, FRED_TREASURY, FRED_VIX, FRED_FOREX }}>
+<script is:inline define:vars={{ CEREBRAS_API_KEY, GNEWS_ARTICLES, FRED_DOLLAR, FRED_GOLD, FRED_OIL, FRED_TREASURY, FRED_VIX, FRED_FOREX }}>
 // CORE DATA (inline for client-side performance)
 const eraProfiles = {
   romana: { trade: 0.82, politics: 0.90, security: 0.88, benefit: 0.25 },
@@ -676,44 +697,13 @@ const fallbackEvents = [
   { time: '04:45 UTC', title: 'European Parliament Calls for Renewed JCPOA Talks', desc: 'Non-binding resolution 412-198 urging engagement. France and Germany willing to mediate.', impacts: [{ pillar:'politics', delta:0.07, label:'Politics' }, { pillar:'trade', delta:0.03, label:'Trade' }] },
 ];
 
-const GNEWS_KEY = GNEWS_API_KEY || '3548eec4eefeecd8bdae9d8f8c29cf2e';
-
-// Primary: GNews API (reliable, free tier)
-async function fetchGNews() {
-  try {
-    const resp = await fetch('https://gnews.io/api/v4/search?q=iran+united+states&lang=en&max=8&apikey=' + GNEWS_KEY);
-    if (!resp.ok) throw new Error('GNews HTTP ' + resp.status);
-    const data = await resp.json();
-    if (!data.articles || data.articles.length < 2) throw new Error('Insufficient articles');
+// News feed: use build-time GNews data (avoids browser CORS), fallback to simulated
+function fetchGNews() {
+  if (GNEWS_ARTICLES && GNEWS_ARTICLES.length >= 2) {
     document.getElementById('feed-source-tag').textContent = 'GNews API — LIVE';
-    dripArticles(data.articles.map(a => ({
-      title: a.title,
-      desc: a.description || a.source.name || '',
-      url: a.url,
-      time: a.publishedAt
-    })));
-  } catch(e) {
-    console.log('GNews unavailable:', e.message, '— trying GDELT');
-    fetchGDELT();
-  }
-}
-
-// Secondary: GDELT API
-async function fetchGDELT() {
-  try {
-    const resp = await fetch('https://api.gdeltproject.org/api/v2/doc/doc?query=iran+united+states+OR+iran+sanctions+OR+iran+nuclear+OR+iran+military&mode=ArtList&maxrecords=8&format=json&sort=datedesc&sourcelang=english');
-    if (!resp.ok) throw new Error('GDELT HTTP ' + resp.status);
-    const data = await resp.json();
-    if (!data.articles || data.articles.length < 3) throw new Error('Insufficient data');
-    document.getElementById('feed-source-tag').textContent = 'GDELT API — LIVE';
-    dripArticles(data.articles.map(a => ({
-      title: a.title,
-      desc: a.domain || '',
-      url: a.url,
-      time: a.seendate || ''
-    })));
-  } catch(e) {
-    console.log('GDELT unavailable:', e.message, '— using simulated feed');
+    dripArticles(GNEWS_ARTICLES);
+  } else {
+    console.log('No build-time GNews data — using simulated feed');
     document.getElementById('feed-source-tag').textContent = 'SIMULATED — APIs Unavailable';
     loadFallback();
   }
