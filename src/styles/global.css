@@ -666,7 +666,7 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .splash-reveal-title { font-size: clamp(1.8rem, 6vw, 3rem); }
   .splash-reveal-subtitle { font-size: 0.8125rem; }
   .splash-orbit { display: flex; justify-content: center; align-items: center; }
-  .era-grid { grid-template-columns: 1fr; }
+  .splash-orbit-ring-wrap { display: block; }
   .metrics-row { grid-template-columns: 1fr; }
   .feed-header { flex-direction: column; align-items: flex-start; gap: 12px; }
   .feed-item { grid-template-columns: 60px 1fr; gap: 10px; padding: 14px 16px; }
@@ -696,6 +696,7 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .splash-half { background: #1a1c1b; }
   .splash-orbit { display: flex; justify-content: center; align-items: center; }
   .splash-orbit-title { font-size: clamp(1.8rem, 10vw, 3rem); }
+  .splash-orbit-ring-wrap { display: block; }
   .splash-scroll-cue { bottom: 24px; }
   .splash-reveal-inner { padding: 0 16px; }
   .splash-reveal-title { font-size: clamp(1.5rem, 7vw, 2.2rem); }
