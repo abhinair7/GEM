@@ -166,6 +166,10 @@ const eraArtifacts: Record<string, string> = {
     <h1 class="splash-title">The Architects<br>of Prosperity</h1>
     <div class="splash-scroll-cue"><div class="splash-scroll-line"></div> Scroll to enter</div>
   </div>
+  <!-- 3D orbiting text — visible on mobile only -->
+  <div class="splash-orbit" aria-hidden="true">
+    <div class="splash-orbit-ring" id="splash-orbit-ring"></div>
+  </div>
 </div>
 
 <!-- Thesis -->
@@ -624,6 +628,24 @@ if (splash) {
     .to('.splash-reveal-subtitle', { opacity: 1, y: 0, duration: 0.14, ease: 'none' }, 0.56)
     .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.10, ease: 'none' }, 0.68);
 }
+
+// 3D Orbiting text ring (mobile only)
+(function() {
+  const ring = document.getElementById('splash-orbit-ring');
+  if (!ring) return;
+  const words = ['Pericles', 'Augustus', 'Taizu', 'Medici', 'Coolidge', 'Eisenhower',
+                 'Democracy', 'Prosperity', 'Equilibrium', 'Empire', 'Strategy', 'Legacy'];
+  const radius = 90;
+  words.forEach(function(word, i) {
+    const angle = (i / words.length) * Math.PI * 2;
+    const span = document.createElement('span');
+    span.className = 'splash-orbit-word';
+    span.textContent = word;
+    span.style.transform = 'translate(-50%, -50%) rotateY(' + (angle * 180 / Math.PI) + 'deg) translateZ(' + radius + 'px)';
+    ring.appendChild(span);
+  });
+})();
+
 document.querySelectorAll('.reveal').forEach(el => {
   gsap.to(el, { scrollTrigger: { trigger: el, start: 'top 85%' }, opacity:1, y:0, duration:0.8, ease:'power3.out' });
 });
