@@ -110,10 +110,11 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-top: 12vh;
   z-index: 3;
   text-align: center;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.15) 60%, transparent 100%);
+  background: radial-gradient(ellipse at center top, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 40%, transparent 70%);
 }
 .splash-overline {
   font-size: 0.625rem;
@@ -499,7 +500,7 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; background: v
 .chart-panel { background: var(--surface); padding: 36px; }
 .chart-panel-title { font-size: 0.625rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--outline); margin-bottom: 8px; }
 .chart-panel-sub { font-size: 0.75rem; color: var(--on-surface-variant); margin-bottom: 24px; line-height: 1.5; }
-canvas { display: block; }
+canvas { display: block; max-width: 100%; }
 .real-chart-status { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--outline); margin-bottom: 12px; transition: opacity 0.4s; }
 .real-chart-status.loaded { color: var(--tertiary); }
 .real-chart-status.error { color: var(--error-light); }

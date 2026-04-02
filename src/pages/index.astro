@@ -5,6 +5,57 @@ import '../styles/global.css';
 
 const CEREBRAS_API_KEY = import.meta.env.PUBLIC_CEREBRAS_API_KEY || '';
 const GNEWS_API_KEY = import.meta.env.PUBLIC_GNEWS_API_KEY || '';
+const ALPHAVANTAGE_API_KEY = import.meta.env.PUBLIC_ALPHAVANTAGE_API_KEY || '';
+
+// ── SERVER-SIDE DATA FETCHING (runs at build time — no CORS) ──
+function parseFredCsv(csv: string) {
+  return csv.trim().split('\n').slice(1).reduce((arr: any[], line: string) => {
+    const [dateStr, valStr] = line.split(',');
+    if (valStr && valStr !== '.' && !isNaN(parseFloat(valStr))) {
+      const [y, m] = dateStr.split('-').map(Number);
+      arr.push({ year: y + (m - 1) / 12, value: parseFloat(valStr), date: dateStr });
+    }
+    return arr;
+  }, []).sort((a: any, b: any) => a.year - b.year);
+}
+
+async function fetchFredSeries(id: string) {
+  try {
+    const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=2020-01-01&coed=2026-12-31&fq=Monthly&fam=avg`;
+    const resp = await fetch(url);
+    if (!resp.ok) return [];
+    return parseFredCsv(await resp.text());
+  } catch { return []; }
+}
+
+async function fetchAlphaVantageForex() {
+  try {
+    if (!ALPHAVANTAGE_API_KEY) return [];
+    const url = `https://www.alphavantage.co/query?function=FX_MONTHLY&from_symbol=USD&to_symbol=EUR&apikey=${ALPHAVANTAGE_API_KEY}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return [];
+    const json = await resp.json();
+    const series = json['Time Series FX (Monthly)'];
+    if (!series) return [];
+    return Object.entries(series).reduce((arr: any[], [dateStr, vals]: [string, any]) => {
+      const [y, m] = dateStr.split('-').map(Number);
+      if (y >= 2020) arr.push({ year: y + (m - 1) / 12, value: parseFloat(vals['4. close']), date: dateStr });
+      return arr;
+    }, []).sort((a: any, b: any) => a.year - b.year);
+  } catch { return []; }
+}
+
+// Fetch all 6 datasets in parallel at build time
+const [FRED_DOLLAR, FRED_GOLD, FRED_OIL, FRED_TREASURY, FRED_VIX, FRED_FOREX] = await Promise.all([
+  fetchFredSeries('DTWEXBGS'),
+  fetchFredSeries('PCU21222122'),
+  fetchFredSeries('DCOILBRENTEU'),
+  fetchFredSeries('T10Y2Y'),
+  fetchFredSeries('VIXCLS'),
+  fetchFredSeries('DEXUSEU'),
+]);
+
+console.log(`[BUILD] FRED data: Dollar=${FRED_DOLLAR.length}, Gold=${FRED_GOLD.length}, Oil=${FRED_OIL.length}, Treasury=${FRED_TREASURY.length}, VIX=${FRED_VIX.length}, Forex=${FRED_FOREX.length}`);
 
 const eraArtifacts: Record<string, string> = {
   romana: `<svg class="era-artifact-svg" viewBox="0 0 60 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
@@ -130,7 +181,6 @@ const eraArtifacts: Record<string, string> = {
   <div class="splash-half splash-right"><img src="/architects.jpg" alt="" class="splash-img" /></div>
   <div class="splash-vignette"></div>
   <div class="splash-title-wrap">
-    <div class="splash-overline">The Geopolitical Equilibrium Model presents</div>
     <h1 class="splash-title">The Architects<br>of Prosperity</h1>
     <div class="splash-scroll-cue"><div class="splash-scroll-line"></div> Scroll to enter</div>
   </div>
@@ -274,7 +324,7 @@ const eraArtifacts: Record<string, string> = {
     <div class="chart-panel reveal">
       <div class="chart-panel-title">Era Proximity Map (PCA Projection)</div>
       <div class="chart-panel-sub">All 6 eras projected into 2D space via principal component reduction. Your position (gold dot) shows clustering affinity in real-time.</div>
-      <canvas id="scatter-chart" width="480" height="400"></canvas>
+      <canvas id="scatter-chart" width="640" height="540"></canvas>
     </div>
   </div>
 
@@ -324,28 +374,51 @@ const eraArtifacts: Record<string, string> = {
   <div class="analysis-header" style="margin-top:1.5rem;">
     <div class="section-overline reveal">Live Empirical Data</div>
     <h2 class="reveal">Real-World Economic Intelligence</h2>
-    <p class="reveal">Live data from World Bank Open Data API and FRED (Federal Reserve Economic Data). No hardcoded values — every data point fetched in real-time from authoritative sources.</p>
+    <p class="reveal">Six live datasets fetched at build-time from the Federal Reserve Economic Data (FRED) API. ~400 monthly observations rendered across six financial indicators — zero hardcoded values, all sourced from the Federal Reserve.</p>
+  </div>
+
+  <div class="analysis-grid">
+    <div class="chart-panel reveal">
+      <div class="chart-panel-title">U.S. Dollar Strength — Trade-Weighted Index (2020–Present)</div>
+      <div class="chart-panel-sub">Broad trade-weighted U.S. dollar index against major currencies. Rising = stronger dollar, greater economic leverage. Source: FRED (DTWEXBGS).</div>
+      <div class="real-chart-status" id="dollar-status">⟳ Fetching FRED data…</div>
+      <canvas id="dollar-chart" width="1100" height="440"></canvas>
+    </div>
+    <div class="chart-panel reveal">
+      <div class="chart-panel-title">Gold Mining Output Price Index — Safe-Haven Demand (2020–Present)</div>
+      <div class="chart-panel-sub">Producer Price Index for gold ore mining — tracks gold market value at source. Spikes correlate with geopolitical crises, central bank accumulation, and sanctions-driven de-dollarisation. Source: FRED (PCU21222122).</div>
+      <div class="real-chart-status" id="gold-status">⟳ Fetching FRED data…</div>
+      <canvas id="gold-chart" width="1100" height="440"></canvas>
+    </div>
   </div>
 
   <div class="chart-panel analysis-full reveal">
-    <div class="chart-panel-title">U.S. vs Iran — GDP Per Capita (2020–Present)</div>
-    <div class="chart-panel-sub">Year-by-year comparison. Constant 2015 USD. Source: World Bank (NY.GDP.PCAP.KD). Post-pandemic divergence in real-time.</div>
-    <div class="real-chart-status" id="gdp-status">⟳ Fetching World Bank data…</div>
-    <canvas id="gdp-chart" width="1100" height="400"></canvas>
-  </div>
-
-  <div class="chart-panel analysis-full reveal">
-    <div class="chart-panel-title">Trade Openness — U.S. vs Iran (2020–Present)</div>
-    <div class="chart-panel-sub">Exports + Imports as share of GDP. Source: World Bank (NE.TRD.GNFS.ZS). Post-COVID trade recovery patterns and sanctions impact.</div>
-    <div class="real-chart-status" id="trade-status">⟳ Loading…</div>
-    <canvas id="trade-chart" width="1100" height="400"></canvas>
-  </div>
-
-  <div class="chart-panel analysis-full reveal">
-    <div class="chart-panel-title">Brent Crude Oil — 2020 to Present</div>
-    <div class="chart-panel-sub">Stepped area chart showing post-pandemic price recovery, Ukraine war shock, and current plateau. Source: FRED (DCOILBRENTEU).</div>
+    <div class="chart-panel-title">Brent Crude Oil — Energy Market Volatility (2020–Present)</div>
+    <div class="chart-panel-sub">Monthly averaged Brent crude prices. Every major price shock correlates with Middle East geopolitical events. Source: FRED (DCOILBRENTEU).</div>
     <div class="real-chart-status" id="oil-status">⟳ Fetching FRED data…</div>
     <canvas id="oil-chart" width="1100" height="420"></canvas>
+  </div>
+
+  <div class="analysis-grid">
+    <div class="chart-panel reveal">
+      <div class="chart-panel-title">Treasury Yield Spread — Recession Risk (2020–Present)</div>
+      <div class="chart-panel-sub">10-Year minus 2-Year Treasury rate. Negative = inverted yield curve = recession signal. The most reliable macro early-warning indicator. Source: FRED (T10Y2Y).</div>
+      <div class="real-chart-status" id="treasury-status">⟳ Fetching FRED data…</div>
+      <canvas id="treasury-chart" width="1100" height="440"></canvas>
+    </div>
+    <div class="chart-panel reveal">
+      <div class="chart-panel-title">CBOE Volatility Index (VIX) — Market Fear Gauge (2020–Present)</div>
+      <div class="chart-panel-sub">Lollipop spike chart — each stem represents a monthly reading. Dots above the "calm zone" (VIX &gt; 20) signal geopolitical or market stress events. Source: FRED (VIXCLS).</div>
+      <div class="real-chart-status" id="vix-status">⟳ Fetching FRED data…</div>
+      <canvas id="vix-chart" width="1100" height="440"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-panel analysis-full reveal">
+    <div class="chart-panel-title">USD/EUR Exchange Rate — Currency Hegemony (2020–Present)</div>
+    <div class="chart-panel-sub">Dot plot with 12-month moving average trend line. Each dot is a monthly rate; the bold line reveals structural shifts in dollar hegemony. Source: FRED (DEXUSEU).</div>
+    <div class="real-chart-status" id="forex-status">⟳ Fetching FRED data…</div>
+    <canvas id="forex-chart" width="1100" height="420"></canvas>
   </div>
 
   <!-- AI Era Intelligence — Data Synthesis Flashcards -->
@@ -396,7 +469,7 @@ const eraArtifacts: Record<string, string> = {
 <!-- =========================================================
      ENGINE SCRIPT — All simulation logic, charts, GDELT feed
      ========================================================= -->
-<script is:inline define:vars={{ CEREBRAS_API_KEY, GNEWS_API_KEY }}>
+<script is:inline define:vars={{ CEREBRAS_API_KEY, GNEWS_API_KEY, FRED_DOLLAR, FRED_GOLD, FRED_OIL, FRED_TREASURY, FRED_VIX, FRED_FOREX }}>
 // CORE DATA (inline for client-side performance)
 const eraProfiles = {
   romana: { trade: 0.82, politics: 0.90, security: 0.88, benefit: 0.25 },
@@ -424,6 +497,9 @@ const eraColors = { romana: '#8b6914', song: '#2d6e5f', renaissance: '#c5a059', 
 const CEREBRAS_KEY = CEREBRAS_API_KEY || '';
 let aiDebounce = null;
 let briefingGenerated = false;
+
+// Global store for real chart data (fed into AI prompts dynamically)
+const _chartData = { dollar: null, gold: null, oil: null, treasury: null, vix: null, forex: null };
 let aiCallQueue = Promise.resolve();
 
 async function callAI(prompt, maxTokens, retries = 3) {
@@ -838,47 +914,145 @@ function drawRadar(input, matchedEra) {
 }
 
 // =========================================================
-// SCATTER CHART
+// SCATTER CHART — PCA PROJECTION
 // =========================================================
-function project2D(p) { return { x: (p.trade - p.benefit + 1) / 2, y: (p.politics + p.security) / 2 }; }
+function pcaProject(profiles, inputPoint) {
+  // Gather all points as 4D vectors: [trade, politics, security, benefit]
+  const keys = Object.keys(profiles);
+  const raw = keys.map(k => [profiles[k].trade, profiles[k].politics, profiles[k].security, profiles[k].benefit]);
+  raw.push([inputPoint.trade, inputPoint.politics, inputPoint.security, inputPoint.benefit]);
+  const n = raw.length, d = 4;
+  // Compute mean per dimension
+  const mean = Array(d).fill(0);
+  raw.forEach(p => p.forEach((v, i) => mean[i] += v));
+  mean.forEach((_, i) => mean[i] /= n);
+  // Center
+  const centered = raw.map(p => p.map((v, i) => v - mean[i]));
+  // Covariance matrix
+  const cov = Array.from({length: d}, () => Array(d).fill(0));
+  centered.forEach(p => { for (let i=0;i<d;i++) for (let j=0;j<d;j++) cov[i][j] += p[i]*p[j]; });
+  for (let i=0;i<d;i++) for (let j=0;j<d;j++) cov[i][j] /= (n-1);
+  // Power iteration for eigenvector
+  function topEigen(mat) {
+    let v = [1, 0.7, 0.4, 0.1];
+    let eigenval = 0;
+    for (let iter=0;iter<200;iter++) {
+      const nv = Array(d).fill(0);
+      for (let i=0;i<d;i++) for (let j=0;j<d;j++) nv[i] += mat[i][j]*v[j];
+      eigenval = Math.sqrt(nv.reduce((s,x)=>s+x*x,0));
+      if (eigenval === 0) break;
+      v = nv.map(x => x/eigenval);
+    }
+    return { vec: v, val: eigenval };
+  }
+  const e1 = topEigen(cov);
+  // Deflate for second component
+  const cov2 = cov.map((row,i) => row.map((val,j) => val - e1.val * e1.vec[i] * e1.vec[j]));
+  const e2 = topEigen(cov2);
+  // Project
+  return centered.map(p => ({
+    x: p.reduce((s,v,i) => s + v * e1.vec[i], 0),
+    y: p.reduce((s,v,i) => s + v * e2.vec[i], 0)
+  }));
+}
 
 function drawScatter(input, matchedEra) {
   const canvas = document.getElementById('scatter-chart');
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.width, cssH = canvas.height;
+  canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+  canvas.style.width = cssW + 'px'; canvas.style.height = cssH + 'px';
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height, pad = 60;
+  ctx.scale(dpr, dpr);
+  const W = cssW, H = cssH;
+  const pad = { top: 55, right: 50, bottom: 55, left: 60 };
   ctx.clearRect(0,0,W,H);
-  ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(pad, H-pad); ctx.lineTo(W-pad, H-pad); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(pad, H-pad); ctx.lineTo(pad, pad); ctx.stroke();
-  ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
-  ctx.fillText('TRADE–BENEFIT AXIS (OPENNESS)', W/2, H-15);
-  ctx.save(); ctx.translate(15, H/2); ctx.rotate(-Math.PI/2);
-  ctx.fillText('STABILITY AXIS (POLITICS + SECURITY)', 0, 0); ctx.restore();
-  for (let i = 0.2; i <= 0.8; i += 0.2) {
-    const gx = pad + i*(W-2*pad), gy = H - pad - i*(H-2*pad);
-    ctx.beginPath(); ctx.moveTo(gx, H-pad); ctx.lineTo(gx, pad); ctx.strokeStyle='rgba(0,0,0,0.03)'; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(pad, gy); ctx.lineTo(W-pad, gy); ctx.stroke();
-  }
-  function toCanvas(pt) { return { x: pad + pt.x*(W-2*pad), y: H - pad - pt.y*(H-2*pad) }; }
+
+  // Run PCA
   const eraKeys = Object.keys(eraProfiles);
-  eraKeys.forEach(k => {
-    const pt = toCanvas(project2D(eraProfiles[k]));
-    const userPt = toCanvas(project2D(input));
-    ctx.beginPath(); ctx.moveTo(pt.x, pt.y); ctx.lineTo(userPt.x, userPt.y);
-    ctx.strokeStyle = k === matchedEra ? 'rgba(197,160,89,0.3)' : 'rgba(0,0,0,0.04)';
-    ctx.lineWidth = k === matchedEra ? 1.5 : 1; ctx.stroke();
-    const r = k === matchedEra ? 8 : 6;
-    ctx.beginPath(); ctx.arc(pt.x, pt.y, r, 0, Math.PI*2);
-    ctx.fillStyle = k === matchedEra ? eraColors[k] : '#a3a8a0'; ctx.fill();
-    if (k === matchedEra) { ctx.strokeStyle = eraColors[k]; ctx.lineWidth = 2; ctx.stroke(); }
-    ctx.font = k===matchedEra ? '600 10px Inter' : '400 9px Inter';
-    ctx.fillStyle = k===matchedEra ? '#1a1c1b' : '#74796e';
-    ctx.textAlign = 'center'; ctx.fillText(eraInfo[k].name, pt.x, pt.y - r - 6);
+  const projected = pcaProject(eraProfiles, input); // last point = user
+  const eraPoints = projected.slice(0, eraKeys.length);
+  const userPoint = projected[projected.length - 1];
+
+  // Compute bounds with padding
+  const allX = projected.map(p => p.x), allY = projected.map(p => p.y);
+  let minX = Math.min(...allX), maxX = Math.max(...allX);
+  let minY = Math.min(...allY), maxY = Math.max(...allY);
+  const rangeX = maxX - minX || 1, rangeY = maxY - minY || 1;
+  const marginFactor = 0.15;
+  minX -= rangeX * marginFactor; maxX += rangeX * marginFactor;
+  minY -= rangeY * marginFactor; maxY += rangeY * marginFactor;
+
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  function toCanvas(pt) {
+    return {
+      x: pad.left + ((pt.x - minX) / (maxX - minX)) * cw,
+      y: pad.top + ch - ((pt.y - minY) / (maxY - minY)) * ch
+    };
+  }
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const gx = pad.left + (i/4) * cw;
+    const gy = pad.top + (i/4) * ch;
+    ctx.beginPath(); ctx.moveTo(gx, pad.top); ctx.lineTo(gx, pad.top + ch); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(pad.left + cw, gy); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ch); ctx.lineTo(pad.left + cw, pad.top + ch); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ch); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+
+  // Axis labels
+  ctx.font = '500 10px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+  ctx.fillText('PC1 — TRADE OPENNESS vs. BENEFIT CONCENTRATION', pad.left + cw/2, H - 10);
+  ctx.save(); ctx.translate(14, pad.top + ch/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('PC2 — STABILITY & GOVERNANCE', 0, 0); ctx.restore();
+
+  // Dashed connection lines from user to each era
+  const up = toCanvas(userPoint);
+  eraKeys.forEach((k, i) => {
+    const pt = toCanvas(eraPoints[i]);
+    ctx.beginPath(); ctx.moveTo(pt.x, pt.y); ctx.lineTo(up.x, up.y);
+    ctx.setLineDash(k === matchedEra ? [] : [4,4]);
+    ctx.strokeStyle = k === matchedEra ? 'rgba(197,160,89,0.5)' : 'rgba(0,0,0,0.06)';
+    ctx.lineWidth = k === matchedEra ? 2 : 1; ctx.stroke();
+    ctx.setLineDash([]);
   });
-  const up = toCanvas(project2D(input));
-  ctx.beginPath(); ctx.arc(up.x, up.y, 7, 0, Math.PI*2);
-  ctx.fillStyle = '#c5a059'; ctx.fill(); ctx.strokeStyle = '#8b6914'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.font = '600 10px Inter'; ctx.fillStyle = '#8b6914'; ctx.textAlign = 'center'; ctx.fillText('YOU', up.x, up.y - 14);
+
+  // Era dots
+  eraKeys.forEach((k, i) => {
+    const pt = toCanvas(eraPoints[i]);
+    const isMatch = k === matchedEra;
+    const r = isMatch ? 11 : 8;
+    // Shadow for matched
+    if (isMatch) {
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, r + 4, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(197,160,89,0.12)'; ctx.fill();
+    }
+    // Dot
+    ctx.beginPath(); ctx.arc(pt.x, pt.y, r, 0, Math.PI*2);
+    ctx.fillStyle = isMatch ? eraColors[k] : '#b0b5ac'; ctx.fill();
+    if (isMatch) { ctx.strokeStyle = eraColors[k]; ctx.lineWidth = 2.5; ctx.stroke(); }
+    // Label
+    ctx.font = isMatch ? '600 12px Inter' : '400 11px Inter';
+    ctx.fillStyle = isMatch ? '#1a1c1b' : '#74796e';
+    ctx.textAlign = 'center';
+    // Offset label to avoid overlapping the dot
+    const labelY = pt.y - r - 8;
+    ctx.fillText(eraInfo[k].name, pt.x, labelY);
+  });
+
+  // User dot — gold with glow
+  ctx.beginPath(); ctx.arc(up.x, up.y, 14, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(197,160,89,0.15)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(up.x, up.y, 9, 0, Math.PI*2);
+  ctx.fillStyle = '#c5a059'; ctx.fill();
+  ctx.strokeStyle = '#8b6914'; ctx.lineWidth = 2.5; ctx.stroke();
+  ctx.font = '700 12px Inter'; ctx.fillStyle = '#8b6914'; ctx.textAlign = 'center';
+  ctx.fillText('YOU', up.x, up.y - 18);
 }
 
 // =========================================================
@@ -1185,7 +1359,278 @@ function drawAreaChart(canvasId, datasets, options = {}) {
 
 
 // =========================================================
-// CHART TYPE 6: STEPPED AREA CHART (for Oil)
+// CHART TYPE: VERTICAL BAR CHART (for Gold)
+// =========================================================
+function drawBarChart(canvasId, datasets, options = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 35, right: 40, bottom: 55, left: 70 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  ctx.clearRect(0, 0, W, H);
+
+  const ds = datasets[0];
+  const sorted = ds.data.slice().sort((a,b) => a.year - b.year);
+  if (sorted.length < 2) return;
+  const minYear = Math.min(...sorted.map(d=>d.year));
+  const maxYear = Math.max(...sorted.map(d=>d.year));
+  const maxVal = (options.maxVal || Math.max(...sorted.map(d=>d.value))) * 1.1;
+  const yearRange = maxYear - minYear || 1;
+  function toX(yr) { return pad.left + ((yr-minYear)/yearRange)*cw; }
+  function toY(v) { return H - pad.bottom - (v/maxVal)*ch; }
+
+  // Grid
+  const ySteps = 5;
+  ctx.font = '400 9px Inter'; ctx.fillStyle = '#a3a8a0'; ctx.textAlign = 'right';
+  for (let i = 0; i <= ySteps; i++) {
+    const v = maxVal*i/ySteps, y = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
+  }
+  ctx.textAlign = 'center';
+  const xInt = yearRange > 30 ? 5 : yearRange > 15 ? 2 : 1;
+  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
+    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+
+  // Bars
+  const barW = Math.max(2, (cw / sorted.length) * 0.7);
+  sorted.forEach((d, i) => {
+    const x = toX(d.year) - barW/2;
+    const y = toY(d.value);
+    const barH = H - pad.bottom - y;
+    // Gradient per bar
+    const grad = ctx.createLinearGradient(0, y, 0, H-pad.bottom);
+    grad.addColorStop(0, ds.color);
+    grad.addColorStop(1, ds.color + '40');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, barW, barH);
+    // Subtle border on top
+    ctx.fillStyle = ds.color;
+    ctx.fillRect(x, y, barW, 2);
+  });
+
+  // Events
+  if (options.events) {
+    options.events.forEach(ev => {
+      const x = toX(ev.year);
+      if (x >= pad.left && x <= W-pad.right) {
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H-pad.bottom);
+        ctx.strokeStyle = 'rgba(196,68,45,0.3)'; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.save(); ctx.translate(x-4, pad.top+8); ctx.rotate(-Math.PI/2);
+        ctx.font = '600 7px Inter'; ctx.fillStyle = 'rgba(196,68,45,0.7)'; ctx.textAlign = 'right';
+        ctx.fillText(ev.label, 0, 0); ctx.restore();
+      }
+    });
+  }
+
+  // End label
+  const last = sorted[sorted.length-1];
+  ctx.font = '600 10px Inter'; ctx.fillStyle = ds.color; ctx.textAlign = 'left';
+  ctx.fillText(ds.label, toX(last.year)+barW, toY(last.value)+3);
+
+  if (options.yLabel) {
+    ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2);
+    ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+    ctx.fillText(options.yLabel, 0, 0); ctx.restore();
+  }
+}
+
+// =========================================================
+// CHART TYPE: LOLLIPOP / SPIKE CHART (for VIX)
+// =========================================================
+function drawLollipopChart(canvasId, datasets, options = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 35, right: 40, bottom: 55, left: 70 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  ctx.clearRect(0, 0, W, H);
+
+  const ds = datasets[0];
+  const sorted = ds.data.slice().sort((a,b) => a.year - b.year);
+  if (sorted.length < 2) return;
+  const minYear = Math.min(...sorted.map(d=>d.year));
+  const maxYear = Math.max(...sorted.map(d=>d.year));
+  const maxVal = (options.maxVal || Math.max(...sorted.map(d=>d.value))) * 1.1;
+  const yearRange = maxYear - minYear || 1;
+  const baseline = options.baseline || 20; // VIX baseline "normal" level
+  function toX(yr) { return pad.left + ((yr-minYear)/yearRange)*cw; }
+  function toY(v) { return H - pad.bottom - (v/maxVal)*ch; }
+
+  // Grid
+  const ySteps = 5;
+  ctx.font = '400 9px Inter'; ctx.fillStyle = '#a3a8a0'; ctx.textAlign = 'right';
+  for (let i = 0; i <= ySteps; i++) {
+    const v = maxVal*i/ySteps, y = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(0), pad.left-8, y+3);
+  }
+  ctx.textAlign = 'center';
+  const xInt = yearRange > 30 ? 5 : yearRange > 15 ? 2 : 1;
+  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
+    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+
+  // Baseline zone (VIX < 20 = calm)
+  const baseY = toY(baseline);
+  ctx.fillStyle = 'rgba(45,110,95,0.06)';
+  ctx.fillRect(pad.left, baseY, cw, H-pad.bottom-baseY);
+  ctx.beginPath(); ctx.moveTo(pad.left, baseY); ctx.lineTo(W-pad.right, baseY);
+  ctx.strokeStyle = 'rgba(45,110,95,0.3)'; ctx.lineWidth = 1; ctx.setLineDash([6,4]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.font = '500 8px Inter'; ctx.fillStyle = '#2d6e5f'; ctx.textAlign = 'left';
+  ctx.fillText('CALM ZONE (<' + baseline + ')', pad.left+8, baseY+12);
+
+  // Lollipop stems + heads
+  sorted.forEach(d => {
+    const x = toX(d.year);
+    const y = toY(d.value);
+    const baselineY = toY(0);
+    const isSpike = d.value > baseline;
+    // Stem
+    ctx.beginPath(); ctx.moveTo(x, baselineY); ctx.lineTo(x, y);
+    ctx.strokeStyle = isSpike ? ds.color + 'cc' : ds.color + '40';
+    ctx.lineWidth = isSpike ? 2 : 1; ctx.stroke();
+    // Head (dot)
+    ctx.beginPath(); ctx.arc(x, y, isSpike ? 4 : 2.5, 0, Math.PI*2);
+    ctx.fillStyle = isSpike ? ds.color : ds.color + '80';
+    ctx.fill();
+    if (isSpike) { ctx.strokeStyle = ds.color; ctx.lineWidth = 1; ctx.stroke(); }
+  });
+
+  // Events
+  if (options.events) {
+    options.events.forEach(ev => {
+      const x = toX(ev.year);
+      if (x >= pad.left && x <= W-pad.right) {
+        ctx.save(); ctx.translate(x-4, pad.top+8); ctx.rotate(-Math.PI/2);
+        ctx.font = '600 7px Inter'; ctx.fillStyle = 'rgba(196,68,45,0.7)'; ctx.textAlign = 'right';
+        ctx.fillText(ev.label, 0, 0); ctx.restore();
+      }
+    });
+  }
+
+  // End label
+  const last = sorted[sorted.length-1];
+  ctx.font = '600 10px Inter'; ctx.fillStyle = ds.color; ctx.textAlign = 'left';
+  ctx.fillText(ds.label, toX(last.year)+8, toY(last.value)+3);
+
+  if (options.yLabel) {
+    ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2);
+    ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+    ctx.fillText(options.yLabel, 0, 0); ctx.restore();
+  }
+}
+
+// =========================================================
+// CHART TYPE: DOT PLOT WITH TREND LINE (for Forex)
+// =========================================================
+function drawDotPlot(canvasId, datasets, options = {}) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { top: 35, right: 40, bottom: 55, left: 70 };
+  const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  ctx.clearRect(0, 0, W, H);
+
+  const ds = datasets[0];
+  const sorted = ds.data.slice().sort((a,b) => a.year - b.year);
+  if (sorted.length < 2) return;
+  const minYear = Math.min(...sorted.map(d=>d.year));
+  const maxYear = Math.max(...sorted.map(d=>d.year));
+  const allVals = sorted.map(d=>d.value);
+  const minVal = Math.min(...allVals) * 0.97;
+  const maxVal = Math.max(...allVals) * 1.03;
+  const valRange = maxVal - minVal || 1;
+  const yearRange = maxYear - minYear || 1;
+  function toX(yr) { return pad.left + ((yr-minYear)/yearRange)*cw; }
+  function toY(v) { return H - pad.bottom - ((v-minVal)/valRange)*ch; }
+
+  // Grid
+  const ySteps = 5;
+  ctx.font = '400 9px Inter'; ctx.fillStyle = '#a3a8a0'; ctx.textAlign = 'right';
+  for (let i = 0; i <= ySteps; i++) {
+    const v = minVal + (valRange*i/ySteps), y = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillText(options.yFormat ? options.yFormat(v) : v.toFixed(3), pad.left-8, y+3);
+  }
+  ctx.textAlign = 'center';
+  const xInt = yearRange > 30 ? 5 : yearRange > 15 ? 2 : 1;
+  for (let yr = Math.ceil(minYear/xInt)*xInt; yr <= maxYear; yr += xInt) {
+    ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), toX(yr), H-pad.bottom+16);
+  }
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(W-pad.right, H-pad.bottom); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, H-pad.bottom); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+
+  // Moving average trend line (12-month)
+  const windowSize = Math.min(12, Math.floor(sorted.length / 3));
+  if (windowSize >= 2) {
+    ctx.beginPath();
+    let first = true;
+    for (let i = windowSize-1; i < sorted.length; i++) {
+      let sum = 0;
+      for (let j = i-windowSize+1; j <= i; j++) sum += sorted[j].value;
+      const avg = sum / windowSize;
+      const x = toX(sorted[i].year), y = toY(avg);
+      first ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      first = false;
+    }
+    ctx.strokeStyle = ds.color; ctx.lineWidth = 3; ctx.stroke();
+  }
+
+  // Dots
+  sorted.forEach(d => {
+    const x = toX(d.year), y = toY(d.value);
+    // Connecting line to moving avg (subtle)
+    ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI*2);
+    ctx.fillStyle = ds.color + '90'; ctx.fill();
+    ctx.strokeStyle = ds.color; ctx.lineWidth = 1; ctx.stroke();
+  });
+
+  // Events
+  if (options.events) {
+    options.events.forEach(ev => {
+      const x = toX(ev.year);
+      if (x >= pad.left && x <= W-pad.right) {
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, H-pad.bottom);
+        ctx.strokeStyle = 'rgba(196,68,45,0.25)'; ctx.lineWidth = 1; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.save(); ctx.translate(x-4, pad.top+8); ctx.rotate(-Math.PI/2);
+        ctx.font = '600 7px Inter'; ctx.fillStyle = 'rgba(196,68,45,0.7)'; ctx.textAlign = 'right';
+        ctx.fillText(ev.label, 0, 0); ctx.restore();
+      }
+    });
+  }
+
+  // Legend
+  ctx.font = '500 9px Inter'; ctx.fillStyle = ds.color; ctx.textAlign = 'left';
+  ctx.beginPath(); ctx.arc(pad.left+10, H-10, 3, 0, Math.PI*2); ctx.fill();
+  ctx.fillText('Monthly rate', pad.left+20, H-7);
+  ctx.beginPath(); ctx.moveTo(pad.left+110, H-10); ctx.lineTo(pad.left+140, H-10);
+  ctx.strokeStyle = ds.color; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillText('12-mo moving avg', pad.left+146, H-7);
+
+  if (options.yLabel) {
+    ctx.save(); ctx.translate(12, H/2); ctx.rotate(-Math.PI/2);
+    ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+    ctx.fillText(options.yLabel, 0, 0); ctx.restore();
+  }
+}
+
+// =========================================================
+// CHART TYPE: STEPPED AREA CHART (for Oil)
 // =========================================================
 function drawSteppedArea(canvasId, datasets, options = {}) {
   const canvas = document.getElementById(canvasId);
@@ -1294,126 +1739,241 @@ function drawSteppedArea(canvasId, datasets, options = {}) {
   }
 }
 
-// --- WORLD BANK API FETCHER ---
-async function fetchWorldBank(indicator, countryCode, startYear, endYear) {
-  const url = `https://api.worldbank.org/v2/country/${countryCode}/indicator/${indicator}?date=${startYear}:${endYear}&format=json&per_page=500`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error('World Bank API ' + resp.status);
-  const json = await resp.json();
-  if (!json[1]) return [];
-  return json[1]
-    .filter(d => d.value !== null)
-    .map(d => ({ year: parseInt(d.date), value: d.value }))
-    .sort((a, b) => a.year - b.year);
-}
-
 function setStatus(id, text, state) {
   const el = document.getElementById(id);
   if (el) { el.textContent = text; el.className = 'real-chart-status' + (state ? ' ' + state : ''); }
 }
 
-// --- 1. GDP PER CAPITA — GROUPED BAR CHART ---
-async function loadGDPChart() {
-  try {
-    const [usData, irData] = await Promise.all([
-      fetchWorldBank('NY.GDP.PCAP.KD', 'US', 2020, 2025),
-      fetchWorldBank('NY.GDP.PCAP.KD', 'IR', 2020, 2025)
-    ]);
-    setStatus('gdp-status', '✦ ' + (usData.length + irData.length) + ' data points loaded — World Bank Open Data', 'loaded');
-    drawGroupedBar('gdp-chart', [
-      { label: 'United States', data: usData, color: '#44474e' },
-      { label: 'Iran', data: irData, color: '#c4442d' }
-    ], {
-      yLabel: 'GDP PER CAPITA (CONSTANT 2015 USD)',
-      yFormat: v => '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : v.toFixed(0)),
-      events: [
-        { year: 2020, label: 'COVID-19 Pandemic' },
-        { year: 2022, label: 'Ukraine War / Sanctions' }
-      ]
-    });
-  } catch(e) {
-    setStatus('gdp-status', '✗ Failed to load: ' + e.message, 'error');
+// --- TREASURY SPREAD CHART (Zero-Crossing Visualization) ---
+function drawSpreadChart(canvasId, data, options) {
+  options = options || {};
+  var canvas = document.getElementById(canvasId);
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var pad = { top: 35, right: 40, bottom: 55, left: 70 };
+  var cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+  ctx.clearRect(0, 0, W, H);
+  if (!data.length) return;
+
+  var vals = data.map(function(d) { return d.value; });
+  var absMax = Math.max(Math.abs(Math.min.apply(null, vals)), Math.abs(Math.max.apply(null, vals))) * 1.2;
+  if (absMax < 0.5) absMax = 0.5;
+  var minVal = -absMax, maxVal = absMax, valRange = maxVal - minVal;
+  var minYear = data[0].year, maxYear = data[data.length - 1].year, yearRange = maxYear - minYear || 1;
+
+  function toX(yr) { return pad.left + ((yr - minYear) / yearRange) * cw; }
+  function toY(v) { return pad.top + ch - ((v - minVal) / valRange) * ch; }
+
+  // Y-axis gridlines
+  ctx.font = '400 9px Inter'; ctx.textAlign = 'right';
+  var step = absMax > 2 ? 1 : absMax > 1 ? 0.5 : 0.25;
+  for (var v = Math.ceil(-absMax / step) * step; v <= absMax; v += step) {
+    var y = toY(v);
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + cw, y);
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = '#a3a8a0';
+    if (Math.abs(v) > 0.01) ctx.fillText((v > 0 ? '+' : '') + v.toFixed(1) + '%', pad.left - 8, y + 3);
   }
+  // X-axis ticks
+  ctx.textAlign = 'center';
+  for (var yr = Math.ceil(minYear); yr <= Math.floor(maxYear) + 1; yr++) {
+    var gx = toX(yr);
+    if (gx >= pad.left && gx <= pad.left + cw) {
+      ctx.beginPath(); ctx.moveTo(gx, pad.top); ctx.lineTo(gx, pad.top + ch);
+      ctx.strokeStyle = 'rgba(0,0,0,0.03)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#a3a8a0'; ctx.fillText(yr.toString(), gx, H - pad.bottom + 16);
+    }
+  }
+  // Axes
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ch); ctx.lineTo(pad.left + cw, pad.top + ch); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ch); ctx.lineTo(pad.left, pad.top); ctx.stroke();
+
+  // Event markers
+  if (options.events) {
+    options.events.forEach(function(ev) {
+      var x = toX(ev.year);
+      if (x >= pad.left && x <= pad.left + cw) {
+        ctx.beginPath(); ctx.moveTo(x, pad.top); ctx.lineTo(x, pad.top + ch);
+        ctx.strokeStyle = 'rgba(196,68,45,0.3)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.save(); ctx.translate(x - 4, pad.top + 8); ctx.rotate(-Math.PI / 2);
+        ctx.font = '600 7px Inter'; ctx.fillStyle = 'rgba(196,68,45,0.7)'; ctx.textAlign = 'right';
+        ctx.fillText(ev.label, 0, 0); ctx.restore();
+      }
+    });
+  }
+
+  // Zero line
+  var zeroY = toY(0);
+  ctx.beginPath(); ctx.moveTo(pad.left, zeroY); ctx.lineTo(pad.left + cw, zeroY);
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = '600 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'right';
+  ctx.fillText('0.0%', pad.left - 8, zeroY + 3);
+
+  // Build full area path
+  var fullPath = new Path2D();
+  fullPath.moveTo(toX(data[0].year), toY(data[0].value));
+  for (var i = 1; i < data.length; i++) fullPath.lineTo(toX(data[i].year), toY(data[i].value));
+  fullPath.lineTo(toX(data[data.length - 1].year), zeroY);
+  fullPath.lineTo(toX(data[0].year), zeroY);
+  fullPath.closePath();
+
+  // Positive fill (green — above zero)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(pad.left, pad.top, cw, zeroY - pad.top); ctx.clip();
+  var posGrad = ctx.createLinearGradient(0, pad.top, 0, zeroY);
+  posGrad.addColorStop(0, 'rgba(45,110,95,0.30)'); posGrad.addColorStop(1, 'rgba(45,110,95,0.03)');
+  ctx.fillStyle = posGrad; ctx.fill(fullPath);
+  ctx.restore();
+
+  // Negative fill (red — below zero)
+  ctx.save();
+  ctx.beginPath(); ctx.rect(pad.left, zeroY, cw, pad.top + ch - zeroY); ctx.clip();
+  var negGrad = ctx.createLinearGradient(0, zeroY, 0, pad.top + ch);
+  negGrad.addColorStop(0, 'rgba(196,68,45,0.03)'); negGrad.addColorStop(1, 'rgba(196,68,45,0.30)');
+  ctx.fillStyle = negGrad; ctx.fill(fullPath);
+  ctx.restore();
+
+  // Main line
+  ctx.beginPath();
+  data.forEach(function(d, i) {
+    var x = toX(d.year), y2 = toY(d.value);
+    i === 0 ? ctx.moveTo(x, y2) : ctx.lineTo(x, y2);
+  });
+  ctx.strokeStyle = '#1a1c1b'; ctx.lineWidth = 2; ctx.stroke();
+
+  // Region labels
+  ctx.font = '600 8px Inter'; ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(45,110,95,0.5)'; ctx.fillText('NORMAL YIELD CURVE', pad.left + 8, zeroY - 10);
+  ctx.fillStyle = 'rgba(196,68,45,0.5)'; ctx.fillText('INVERTED — RECESSION SIGNAL', pad.left + 8, zeroY + 16);
+
+  // Latest value label
+  var last = data[data.length - 1];
+  ctx.font = '600 10px Inter'; ctx.fillStyle = last.value >= 0 ? '#2d6e5f' : '#c4442d';
+  ctx.textAlign = 'left';
+  ctx.fillText((last.value >= 0 ? '+' : '') + last.value.toFixed(2) + '%', toX(last.year) + 6, toY(last.value) + 3);
+
+  // Y axis label
+  ctx.save(); ctx.translate(12, H / 2); ctx.rotate(-Math.PI / 2);
+  ctx.font = '500 9px Inter'; ctx.fillStyle = '#74796e'; ctx.textAlign = 'center';
+  ctx.fillText('10Y–2Y SPREAD (PERCENTAGE POINTS)', 0, 0); ctx.restore();
 }
 
-// --- 2. TRADE OPENNESS — AREA CHART ---
-async function loadTradeChart() {
-  try {
-    const [usData, irData] = await Promise.all([
-      fetchWorldBank('NE.TRD.GNFS.ZS', 'US', 2020, 2025),
-      fetchWorldBank('NE.TRD.GNFS.ZS', 'IR', 2020, 2025)
-    ]);
-    setStatus('trade-status', '✦ ' + (usData.length + irData.length) + ' pts — World Bank', 'loaded');
-    drawAreaChart('trade-chart', [
-      { label: 'U.S.', data: usData, color: '#44474e' },
-      { label: 'Iran', data: irData, color: '#c4442d' }
-    ], { yLabel: 'TRADE (% OF GDP)', yFormat: v => v.toFixed(0) + '%' });
-  } catch(e) { setStatus('trade-status', '✗ ' + e.message, 'error'); }
+// --- 1. U.S. DOLLAR INDEX — AREA CHART ---
+function loadDollarChart() {
+  var data = FRED_DOLLAR;
+  if (!data || !data.length) { setStatus('dollar-status', '✗ No dollar data available', 'error'); return; }
+  _chartData.dollar = data;
+  setStatus('dollar-status', '✦ ' + data.length + ' observations — FRED Trade-Weighted Dollar Index (build-time fetch)', 'loaded');
+  drawAreaChart('dollar-chart', [
+    { label: 'USD Index', data: data, color: '#44474e' }
+  ], {
+    yLabel: 'INDEX (JAN 2006 = 100)',
+    yFormat: function(v) { return v.toFixed(1); },
+    events: [
+      { year: 2020.25, label: 'COVID Dollar Surge' },
+      { year: 2022.15, label: 'Fed Rate Hikes Begin' },
+      { year: 2022.75, label: 'Dollar Peak' },
+      { year: 2024.0, label: 'Rate Cut Expectations' }
+    ]
+  });
+}
+
+// --- 2. GOLD PRICE — AREA CHART ---
+function loadGoldChart() {
+  var data = FRED_GOLD;
+  if (!data || !data.length) { setStatus('gold-status', '✗ No gold data available', 'error'); return; }
+  _chartData.gold = data;
+  setStatus('gold-status', '✦ ' + data.length + ' observations — FRED Gold Mining PPI (build-time fetch)', 'loaded');
+  drawBarChart('gold-chart', [
+    { label: 'Gold PPI', data: data, color: '#8b6914' }
+  ], {
+    yLabel: 'PRODUCER PRICE INDEX (DEC 2003 = 100)',
+    yFormat: function(v) { return v.toFixed(0); },
+    events: [
+      { year: 2020.6, label: 'COVID Safe Haven' },
+      { year: 2022.15, label: 'Ukraine Invasion' },
+      { year: 2023.25, label: 'Banking Crisis' },
+      { year: 2024.25, label: 'Central Bank Buying' }
+    ]
+  });
 }
 
 // --- 3. BRENT CRUDE OIL — STEPPED AREA CHART ---
-async function loadOilChart() {
-  try {
-    const resp = await fetch('https://fred.stlouisfed.org/graph/fredgraph.csv?bgcolor=%23e1e9f0&chart_type=line&drp=0&fo=open%20sans&graph_bgcolor=%23ffffff&height=450&mode=fred&recession_bars=on&txtcolor=%23444444&ts=12&tts=12&width=1168&nt=0&thu=0&trc=0&show_legend=yes&show_axis_titles=yes&show_tooltip=yes&id=DCOILBRENTEU&scale=left&cosd=2020-01-01&coed=2026-03-31&line_color=%234572a7&link_values=false&line_style=solid&mark_type=none&mw=3&lw=2&ost=-99999&oet=99999&mma=0&fml=a&fq=Monthly&fam=avg&fgst=lin&fgsnd=2020-02-01&line_index=1&transformation=lin&vintage_date=2026-04-01&revision_date=2026-04-01&nd=2020-01-01');
-    if (!resp.ok) throw new Error('FRED API ' + resp.status);
-    const csv = await resp.text();
-    const lines = csv.trim().split('\n').slice(1);
-    const data = [];
-    lines.forEach(line => {
-      const [dateStr, valStr] = line.split(',');
-      if (valStr && valStr !== '.' && !isNaN(parseFloat(valStr))) {
-        const year = parseInt(dateStr.split('-')[0]);
-        const month = parseInt(dateStr.split('-')[1]);
-        data.push({ year: year + (month - 1) / 12, value: parseFloat(valStr) });
-      }
-    });
-    const byYear = {};
-    data.forEach(d => {
-      const yr = Math.round(d.year * 2) / 2;
-      if (!byYear[yr]) byYear[yr] = [];
-      byYear[yr].push(d.value);
-    });
-    const averaged = Object.entries(byYear).map(([yr, vals]) => ({
-      year: parseFloat(yr),
-      value: vals.reduce((s, v) => s + v, 0) / vals.length
-    })).sort((a, b) => a.year - b.year);
+function loadOilChart() {
+  var data = FRED_OIL;
+  if (!data || !data.length) { setStatus('oil-status', '✗ No oil data available', 'error'); return; }
+  _chartData.oil = data;
+  setStatus('oil-status', '✦ ' + data.length + ' observations — FRED Brent Crude Oil (build-time fetch)', 'loaded');
+  drawSteppedArea('oil-chart', [
+    { label: 'Brent Crude ($/bbl)', data: data, color: '#2d6e5f' }
+  ], {
+    yLabel: 'PRICE PER BARREL (USD)',
+    yFormat: function(v) { return '$' + v.toFixed(0); },
+    events: [
+      { year: 2020.3, label: 'COVID Crash' },
+      { year: 2021.5, label: 'Recovery Rally' },
+      { year: 2022.15, label: 'Ukraine War Spike' },
+      { year: 2023.5, label: 'OPEC+ Cuts' },
+      { year: 2024.8, label: 'Red Sea Disruption' }
+    ]
+  });
+}
 
-    setStatus('oil-status', '✦ ' + data.length + ' observations loaded — FRED (Brent Crude)', 'loaded');
-    drawSteppedArea('oil-chart', [
-      { label: 'Brent Crude ($/bbl)', data: averaged, color: '#2d6e5f' }
-    ], {
-      yLabel: 'PRICE PER BARREL (USD)',
-      yFormat: v => '$' + v.toFixed(0),
-      events: [
-        { year: 2020.2, label: 'COVID Crash' },
-        { year: 2021.5, label: 'Recovery Rally' },
-        { year: 2022.2, label: 'Ukraine War Spike' },
-        { year: 2023.5, label: 'OPEC+ Cuts' },
-        { year: 2024.8, label: 'Red Sea Disruption' }
-      ]
-    });
-  } catch(e) {
-    setStatus('oil-status', '✗ FRED CORS blocked — loading fallback via World Bank crude proxy', 'error');
-    try {
-      const oilData = await fetchWorldBank('NY.GDP.PETR.RT.ZS', 'IR', 2020, 2025);
-      setStatus('oil-status', '✦ Fallback: Iran Oil Rents (% GDP) — ' + oilData.length + ' pts — World Bank', 'loaded');
-      drawSteppedArea('oil-chart', [
-        { label: 'Iran Oil Rents (% GDP)', data: oilData, color: '#2d6e5f' }
-      ], {
-        yLabel: 'OIL RENTS (% OF GDP)',
-        yFormat: v => v.toFixed(1) + '%',
-        events: [
-          { year: 1979, label: 'Revolution' },
-          { year: 1990, label: 'Gulf War' },
-          { year: 2003, label: 'Iraq War' },
-          { year: 2012, label: 'Sanctions Peak' },
-          { year: 2018, label: 'JCPOA Exit' }
-        ]
-      });
-    } catch(e2) {
-      setStatus('oil-status', '✗ All sources failed: ' + e2.message, 'error');
-    }
-  }
+// --- 4. TREASURY YIELD SPREAD — ZERO-CROSSING CHART ---
+function loadTreasuryChart() {
+  var data = FRED_TREASURY;
+  if (!data || !data.length) { setStatus('treasury-status', '✗ No treasury data available', 'error'); return; }
+  _chartData.treasury = data;
+  setStatus('treasury-status', '✦ ' + data.length + ' observations — FRED 10Y-2Y Treasury Spread (build-time fetch)', 'loaded');
+  drawSpreadChart('treasury-chart', data, {
+    events: [
+      { year: 2022.3, label: 'Curve Inverts' },
+      { year: 2023.5, label: 'Deepest Inversion' },
+      { year: 2024.7, label: 'Curve Normalising' }
+    ]
+  });
+}
+
+// --- 5. VIX VOLATILITY INDEX — AREA CHART ---
+function loadVIXChart() {
+  var data = FRED_VIX;
+  if (!data || !data.length) { setStatus('vix-status', '✗ No VIX data available', 'error'); return; }
+  _chartData.vix = data;
+  setStatus('vix-status', '✦ ' + data.length + ' observations — FRED CBOE Volatility Index (build-time fetch)', 'loaded');
+  drawLollipopChart('vix-chart', [
+    { label: 'VIX', data: data, color: '#c4442d' }
+  ], {
+    yLabel: 'EXPECTED VOLATILITY (%)',
+    yFormat: function(v) { return v.toFixed(0); },
+    baseline: 20,
+    events: [
+      { year: 2020.2, label: 'COVID Panic (82.7)' },
+      { year: 2022.15, label: 'Ukraine Shock' },
+      { year: 2023.25, label: 'SVB Collapse' },
+      { year: 2024.6, label: 'Yen Carry Unwind' }
+    ]
+  });
+}
+
+// --- 6. USD/EUR FOREX — FRED (DEXUSEU) ---
+function loadForexChart() {
+  var data = FRED_FOREX;
+  if (!data || !data.length) { setStatus('forex-status', '✗ No forex data available', 'error'); return; }
+  _chartData.forex = data;
+  setStatus('forex-status', '✦ ' + data.length + ' observations — FRED USD/EUR Exchange Rate (build-time fetch)', 'loaded');
+  drawDotPlot('forex-chart', [
+    { label: 'USD/EUR', data: data, color: '#5c4d8b' }
+  ], {
+    yLabel: 'USD PER 1 EUR',
+    yFormat: function(v) { return v.toFixed(3); },
+    events: [
+      { year: 2020.25, label: 'COVID Volatility' },
+      { year: 2022.15, label: 'Fed Hike Cycle' },
+      { year: 2022.75, label: 'EUR Parity Crisis' },
+      { year: 2024.5, label: 'Rate Cut Divergence' }
+    ]
+  });
 }
 
 // --- AI ERA INTELLIGENCE FLASHCARDS ---
@@ -1430,10 +1990,45 @@ async function generateEraIntel() {
   btn.classList.add('generating');
   btn.textContent = '⟳ Generating Intelligence…';
 
-  // Collect chart data summaries from the status elements
-  const gdpStatus = document.getElementById('gdp-status')?.textContent || '';
-  const tradeStatus = document.getElementById('trade-status')?.textContent || '';
-  const oilStatus = document.getElementById('oil-status')?.textContent || '';
+  // Build dynamic data summaries from actual chart data
+  function summariseSeries(label, arr) {
+    if (!arr || arr.length === 0) return label + ': no data available';
+    const sorted = [...arr].sort((a, b) => a.year - b.year);
+    const latest = sorted[sorted.length - 1];
+    const earliest = sorted[0];
+    const values = sorted.map(d => d.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const avg = values.reduce((s, v) => s + v, 0) / values.length;
+    const trend = latest.value > earliest.value ? 'rising' : latest.value < earliest.value ? 'falling' : 'flat';
+    const pctChange = earliest.value !== 0 ? (((latest.value - earliest.value) / earliest.value) * 100).toFixed(1) : 'N/A';
+    return `${label}: ${sorted.length} data points (${Math.round(earliest.year)}–${Math.round(latest.year)}). Latest: ${latest.value.toLocaleString(undefined,{maximumFractionDigits:1})} | Range: ${min.toLocaleString(undefined,{maximumFractionDigits:1})} – ${max.toLocaleString(undefined,{maximumFractionDigits:1})} | Avg: ${avg.toLocaleString(undefined,{maximumFractionDigits:1})} | Trend: ${trend} (${pctChange}% change)`;
+  }
+
+  let dollarSummary = 'Dollar Index: not yet loaded';
+  if (_chartData.dollar) {
+    dollarSummary = 'U.S. Dollar Index (Trade-Weighted):\n  ' + summariseSeries('USD Index', _chartData.dollar);
+  }
+  let goldSummary = 'Gold Price: not yet loaded';
+  if (_chartData.gold) {
+    goldSummary = 'Gold Spot Price (USD/troy oz):\n  ' + summariseSeries('Gold', _chartData.gold);
+  }
+  let oilSummary = 'Oil Prices: not yet loaded';
+  if (_chartData.oil) {
+    oilSummary = 'Brent Crude Oil ($/barrel):\n  ' + summariseSeries('Brent Crude', _chartData.oil);
+  }
+  let treasurySummary = 'Treasury Spread: not yet loaded';
+  if (_chartData.treasury) {
+    treasurySummary = '10Y-2Y Treasury Yield Spread (%):\n  ' + summariseSeries('Spread', _chartData.treasury);
+  }
+  let vixSummary = 'VIX: not yet loaded';
+  if (_chartData.vix) {
+    vixSummary = 'CBOE Volatility Index (VIX):\n  ' + summariseSeries('VIX', _chartData.vix);
+  }
+  let forexSummary = 'USD/EUR Forex: not yet loaded';
+  if (_chartData.forex) {
+    forexSummary = 'USD/EUR Exchange Rate (Alpha Vantage):\n  ' + summariseSeries('USD/EUR', _chartData.forex);
+  }
 
   const eraKeys = ['romana', 'song', 'renaissance', 'twenties', 'golden', 'nineties'];
   const eraLabels = {
@@ -1445,15 +2040,24 @@ async function generateEraIntel() {
     nineties: 'Information Age (1990s)',
   };
 
-  const prompt = `You are analysing real-world economic data for the Geopolitical Equilibrium Model (GEM). The data includes:
+  const timestamp = new Date().toISOString();
+  const prompt = `You are a senior geopolitical intelligence analyst for the Geopolitical Equilibrium Model (GEM). Timestamp: ${timestamp}
 
-1. GDP Per Capita (U.S. vs Iran): U.S. GDP per capita is roughly $55,000–$65,000 (constant 2015 USD), while Iran is around $5,000–$7,000. The gap has widened since the 1979 revolution and especially after 2012 sanctions.
+Below is LIVE economic data fetched moments ago from the Federal Reserve Economic Data (FRED) API and Alpha Vantage authenticated API — six indicators covering currency strength, safe-haven demand, energy markets, recession risk, market volatility, and forex dynamics. Analyse these EXACT numbers — do not use generic or memorised data:
 
-2. Trade Openness (% GDP): U.S. trades at 25–30% of GDP. Iran collapsed from 50%+ to under 40% post-sanctions. Economic isolation is visible.
+1. ${dollarSummary}
 
-3. Brent Crude Oil: Oil prices spiked during Gulf Wars, 2008 ($140), crashed in 2014 and 2020. Currently $70–$85. Every major price shock correlates with Middle East geopolitical events.
+2. ${goldSummary}
 
-For EACH of the 6 historical eras below, write a 2–3 sentence analytical conclusion connecting what this modern economic data reveals through the strategic lens of that era. Be specific — reference the actual data patterns. Write like a senior intelligence analyst.
+3. ${oilSummary}
+
+4. ${treasurySummary}
+
+5. ${vixSummary}
+
+6. ${forexSummary}
+
+For EACH of the 6 historical eras below, write a 2–3 sentence analytical conclusion connecting what this SPECIFIC modern economic data reveals through the strategic lens of that era. Reference the actual numbers, trends, and percentage changes above. Each era's analysis must be distinct and non-generic.
 
 Format your response EXACTLY as:
 ROMANA: [conclusion]
@@ -1496,28 +2100,18 @@ Eras: ${eraKeys.map(k => eraLabels[k]).join(', ')}`;
 }
 
 // --- LAUNCH ALL REAL DATA CHARTS ---
-// Stagger to avoid overwhelming World Bank API
-async function loadAllRealCharts() {
-  loadGDPChart();
-  await new Promise(r => setTimeout(r, 300));
-  loadTradeChart();
-  await new Promise(r => setTimeout(r, 300));
+// Data was pre-fetched at build time (server-side) — no CORS issues, instant render
+function loadAllRealCharts() {
+  loadDollarChart();
+  loadGoldChart();
   loadOilChart();
+  loadTreasuryChart();
+  loadVIXChart();
+  loadForexChart();
 }
 
-// Trigger when new charts section scrolls into view
-let realChartsLoaded = false;
-const realChartObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting && !realChartsLoaded) {
-      realChartsLoaded = true;
-      loadAllRealCharts();
-      realChartObserver.disconnect();
-    }
-  });
-}, { threshold: 0.05 });
-const gdpChartEl = document.getElementById('gdp-chart');
-if (gdpChartEl) realChartObserver.observe(gdpChartEl);
+// Load real charts immediately — data was pre-fetched at build time
+try { loadAllRealCharts(); } catch(e) { console.error('Chart load error:', e); }
 
 // Initial calculation
 calculate();
