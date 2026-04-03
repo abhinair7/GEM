@@ -44,14 +44,22 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
 
 /* ========== SPLASH — ARCHITECTS SPLIT ========== */
 .splash {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100vh;
   z-index: 200;
   overflow: hidden;
   background: #1a1c1b;
-  touch-action: pan-y;           /* ensure iOS passes vertical swipes to ScrollTrigger */
+  touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
+  transition: opacity 0.4s ease;
+}
+.splash.dismissed {
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
 }
 .splash-half {
   position: absolute;

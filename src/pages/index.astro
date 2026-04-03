@@ -611,44 +611,56 @@ function euclideanDist(a, b) {
 // =========================================================
 gsap.registerPlugin(ScrollTrigger);
 
-// Splash — instant curtain dismiss on ANY scroll/touch/wheel
+// Splash — smooth one-time curtain dismiss
 const splash = document.getElementById('splash');
 if (splash) {
   let splashDismissed = false;
+
+  // Lock body scroll while splash is visible so scroll doesn't move page behind
+  document.body.style.overflow = 'hidden';
+
   function dismissSplash() {
     if (splashDismissed) return;
     splashDismissed = true;
-    // Remove listeners immediately
     window.removeEventListener('wheel', dismissSplash, { capture: true });
-    window.removeEventListener('touchstart', dismissSplash, { capture: true });
+    window.removeEventListener('touchmove', dismissSplash, { capture: true });
     window.removeEventListener('keydown', dismissOnKey, { capture: true });
-    // Animate curtain away instantly with GSAP
+
     const tl = gsap.timeline({
-      onComplete: () => {
-        splash.style.pointerEvents = 'none';
-        // Scroll to reveal section
-        window.scrollTo({ top: splash.offsetHeight, behavior: 'smooth' });
+      onComplete: function() {
+        // After reveal text is shown, wait 2.5s then fade out the entire splash overlay
+        setTimeout(function() {
+          splash.classList.add('dismissed');
+          // Unlock body scroll so user can explore the site
+          document.body.style.overflow = '';
+          window.scrollTo(0, 0);
+        }, 2500);
       }
     });
     tl
       .to('.splash-scroll-cue', { opacity: 0, duration: 0.15, ease: 'none' }, 0)
-      .to('.splash-title-wrap', { opacity: 0, scale: 0.92, duration: 0.3, ease: 'power2.in' }, 0)
-      .to('.splash-orbit', { opacity: 0, scale: 0.92, duration: 0.3, ease: 'power2.in' }, 0)
-      .to('.splash-orbit-ring-wrap', { opacity: 0, scale: 0.92, duration: 0.3, ease: 'power2.in' }, 0)
-      .to('.splash-left',  { xPercent: -100, duration: 0.7, ease: 'power2.inOut' }, 0.1)
-      .to('.splash-right', { xPercent:  100, duration: 0.7, ease: 'power2.inOut' }, 0.1)
-      .to('.splash-vignette', { opacity: 0, duration: 0.3, ease: 'none' }, 0.15)
-      .to('.splash-reveal-overline', { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' }, 0.4)
-      .to('.splash-reveal-rule',     { scaleX: 1, duration: 0.3, ease: 'power2.out' }, 0.45)
-      .to('.splash-reveal-title',    { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }, 0.5)
-      .to('.splash-reveal-subtitle', { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.65)
-      .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.2, ease: 'none' }, 0.8);
+      .to('.splash-title-wrap', { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power2.in' }, 0)
+      .to('.splash-orbit', { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power2.in' }, 0)
+      .to('.splash-orbit-ring-wrap', { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power2.in' }, 0)
+      .to('.splash-left',  { xPercent: -100, duration: 0.8, ease: 'power2.inOut' }, 0.1)
+      .to('.splash-right', { xPercent:  100, duration: 0.8, ease: 'power2.inOut' }, 0.1)
+      .to('.splash-vignette', { opacity: 0, duration: 0.35, ease: 'none' }, 0.2)
+      .to('.splash-reveal-overline', { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.5)
+      .to('.splash-reveal-rule',     { scaleX: 1, duration: 0.3, ease: 'power2.out' }, 0.55)
+      .to('.splash-reveal-title',    { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0.6)
+      .to('.splash-reveal-subtitle', { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }, 0.75)
+      .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.25, ease: 'none' }, 0.9);
   }
+
   function dismissOnKey(e) { if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') dismissSplash(); }
-  // Listen on capture phase so we catch it before anything else
-  window.addEventListener('wheel', dismissSplash, { capture: true, passive: true, once: true });
-  window.addEventListener('touchstart', dismissSplash, { capture: true, passive: true, once: true });
-  window.addEventListener('keydown', dismissOnKey, { capture: true });
+
+  // Wait 1.2s so user sees the splash before we listen
+  setTimeout(function() {
+    if (splashDismissed) return;
+    window.addEventListener('wheel', dismissSplash, { capture: true, passive: true, once: true });
+    window.addEventListener('touchmove', dismissSplash, { capture: true, passive: true, once: true });
+    window.addEventListener('keydown', dismissOnKey, { capture: true });
+  }, 1200);
 }
 
 // 3D orbit ring — contextual keywords spinning below title (mobile)
