@@ -733,14 +733,14 @@ function addFeedItem(time, title, desc, impacts, isLive, url) {
 }
 
 const fallbackEvents = [
-  { time: '14:32 UTC', title: 'IRGC Naval Assets Repositioned Near Strait of Hormuz', desc: 'Iranian Revolutionary Guard deploys 4 fast-attack craft to the eastern corridor. Commercial shipping rerouting.', impacts: [{ pillar:'security', delta:-0.08, label:'Security' }, { pillar:'trade', delta:-0.05, label:'Trade' }] },
-  { time: '13:15 UTC', title: 'U.S. Treasury Expands SWIFT Sanctions on Iranian Banks', desc: 'Three additional Iranian financial institutions added to SDN list. European allies signal conditional support.', impacts: [{ pillar:'trade', delta:-0.06, label:'Trade' }, { pillar:'politics', delta:0.04, label:'Politics' }] },
-  { time: '11:48 UTC', title: 'GCC Emergency Session on Regional Security Framework', desc: 'Saudi Arabia and UAE call emergency consultations. Joint naval patrol proposal on the table.', impacts: [{ pillar:'politics', delta:0.06, label:'Politics' }, { pillar:'security', delta:0.05, label:'Security' }] },
-  { time: '10:22 UTC', title: 'Brent Crude Spikes 4.2% on Hormuz Disruption Fears', desc: 'Oil futures surge. Insurers raise war-risk premiums for Gulf transit.', impacts: [{ pillar:'trade', delta:-0.07, label:'Trade' }, { pillar:'benefit', delta:0.09, label:'Benefit' }] },
-  { time: '09:05 UTC', title: 'USS Eisenhower Strike Group Deploying to 5th Fleet AOR', desc: 'Carrier strike group with 7,500 personnel. Pentagon calls it "routine repositioning."', impacts: [{ pillar:'security', delta:0.10, label:'Security' }, { pillar:'politics', delta:-0.03, label:'Politics' }] },
-  { time: '07:30 UTC', title: 'Tehran Warns of "Proportional Response" to Sanctions', desc: 'Iran Foreign Ministry issues counter-statement. Back-channel contacts via Oman ongoing.', impacts: [{ pillar:'politics', delta:-0.05, label:'Politics' }, { pillar:'security', delta:-0.04, label:'Security' }] },
-  { time: '06:12 UTC', title: 'Iranian APT Groups Probing Gulf Energy Infrastructure', desc: 'NSA advisory on increased cyber operations against Saudi Aramco and ADNOC systems.', impacts: [{ pillar:'security', delta:-0.06, label:'Security' }, { pillar:'trade', delta:-0.03, label:'Trade' }] },
-  { time: '04:45 UTC', title: 'European Parliament Calls for Renewed JCPOA Talks', desc: 'Non-binding resolution 412-198 urging engagement. France and Germany willing to mediate.', impacts: [{ pillar:'politics', delta:0.07, label:'Politics' }, { pillar:'trade', delta:0.03, label:'Trade' }] },
+  { time: '09:32 EST', title: 'IRGC Naval Assets Repositioned Near Strait of Hormuz', desc: 'Iranian Revolutionary Guard deploys 4 fast-attack craft to the eastern corridor. Commercial shipping rerouting.', impacts: [{ pillar:'security', delta:-0.08, label:'Security' }, { pillar:'trade', delta:-0.05, label:'Trade' }] },
+  { time: '08:15 EST', title: 'U.S. Treasury Expands SWIFT Sanctions on Iranian Banks', desc: 'Three additional Iranian financial institutions added to SDN list. European allies signal conditional support.', impacts: [{ pillar:'trade', delta:-0.06, label:'Trade' }, { pillar:'politics', delta:0.04, label:'Politics' }] },
+  { time: '06:48 EST', title: 'GCC Emergency Session on Regional Security Framework', desc: 'Saudi Arabia and UAE call emergency consultations. Joint naval patrol proposal on the table.', impacts: [{ pillar:'politics', delta:0.06, label:'Politics' }, { pillar:'security', delta:0.05, label:'Security' }] },
+  { time: '05:22 EST', title: 'Brent Crude Spikes 4.2% on Hormuz Disruption Fears', desc: 'Oil futures surge. Insurers raise war-risk premiums for Gulf transit.', impacts: [{ pillar:'trade', delta:-0.07, label:'Trade' }, { pillar:'benefit', delta:0.09, label:'Benefit' }] },
+  { time: '04:05 EST', title: 'USS Eisenhower Strike Group Deploying to 5th Fleet AOR', desc: 'Carrier strike group with 7,500 personnel. Pentagon calls it "routine repositioning."', impacts: [{ pillar:'security', delta:0.10, label:'Security' }, { pillar:'politics', delta:-0.03, label:'Politics' }] },
+  { time: '02:30 EST', title: 'Tehran Warns of "Proportional Response" to Sanctions', desc: 'Iran Foreign Ministry issues counter-statement. Back-channel contacts via Oman ongoing.', impacts: [{ pillar:'politics', delta:-0.05, label:'Politics' }, { pillar:'security', delta:-0.04, label:'Security' }] },
+  { time: '01:12 EST', title: 'Iranian APT Groups Probing Gulf Energy Infrastructure', desc: 'NSA advisory on increased cyber operations against Saudi Aramco and ADNOC systems.', impacts: [{ pillar:'security', delta:-0.06, label:'Security' }, { pillar:'trade', delta:-0.03, label:'Trade' }] },
+  { time: '23:45 EST', title: 'European Parliament Calls for Renewed JCPOA Talks', desc: 'Non-binding resolution 412-198 urging engagement. France and Germany willing to mediate.', impacts: [{ pillar:'politics', delta:0.07, label:'Politics' }, { pillar:'trade', delta:0.03, label:'Trade' }] },
 ];
 
 // News feed: fetch GDELT directly from client (no CORS issues, avoids Vercel 10s timeout)
@@ -790,8 +790,10 @@ function dripArticles(articles) {
     let time = 'LIVE';
     if (art.time) {
       const d = new Date(art.time);
-      if (!isNaN(d)) time = String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0') + ' UTC';
-      else if (art.time.length >= 13) time = art.time.substring(9,11) + ':' + art.time.substring(11,13) + ' UTC';
+      if (!isNaN(d)) {
+        const est = d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'America/New_York' });
+        time = est + ' EST';
+      }
     }
     collectedHeadlines.push(art.title);
     const impacts = classifyArticle(art.title);
