@@ -616,8 +616,8 @@ const splash = document.getElementById('splash');
 if (splash) {
   let splashDismissed = false;
 
-  // Block ALL scroll during animation so momentum doesn't move the page
-  function blockScroll(e) { e.preventDefault(); }
+  // Lock page scroll from the start — page cannot move while splash is showing
+  document.documentElement.style.overflow = 'hidden';
 
   function dismissSplash(e) {
     if (splashDismissed) return;
@@ -627,30 +627,28 @@ if (splash) {
     window.removeEventListener('touchmove', dismissSplash, { capture: true });
     window.removeEventListener('keydown', dismissOnKey, { capture: true });
 
-    // Freeze scroll for the duration of the animation
-    window.addEventListener('wheel', blockScroll, { capture: true, passive: false });
-    window.addEventListener('touchmove', blockScroll, { capture: true, passive: false });
-
     const tl = gsap.timeline({
       onComplete: function() {
-        // Unfreeze scroll after animation finishes
-        window.removeEventListener('wheel', blockScroll, { capture: true });
-        window.removeEventListener('touchmove', blockScroll, { capture: true });
+        // Unlock scroll only after animation is fully done
+        document.documentElement.style.overflow = '';
       }
     });
     tl
-      .to('.splash-scroll-cue', { opacity: 0, duration: 0.15, ease: 'none' }, 0)
-      .to('.splash-title-wrap', { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power2.in' }, 0)
-      .to('.splash-orbit', { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power2.in' }, 0)
-      .to('.splash-orbit-ring-wrap', { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power2.in' }, 0)
-      .to('.splash-left',  { xPercent: -100, duration: 0.8, ease: 'power2.inOut' }, 0.1)
-      .to('.splash-right', { xPercent:  100, duration: 0.8, ease: 'power2.inOut' }, 0.1)
-      .to('.splash-vignette', { opacity: 0, duration: 0.35, ease: 'none' }, 0.2)
-      .to('.splash-reveal-overline', { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' }, 0.5)
-      .to('.splash-reveal-rule',     { scaleX: 1, duration: 0.3, ease: 'power2.out' }, 0.55)
-      .to('.splash-reveal-title',    { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }, 0.6)
-      .to('.splash-reveal-subtitle', { opacity: 1, y: 0, duration: 0.35, ease: 'power2.out' }, 0.75)
-      .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.25, ease: 'none' }, 0.9);
+      // Fade out title + cue
+      .to('.splash-scroll-cue', { opacity: 0, duration: 0.2, ease: 'none' }, 0)
+      .to('.splash-title-wrap', { opacity: 0, y: -30, duration: 0.4, ease: 'power3.in' }, 0)
+      .to('.splash-orbit', { opacity: 0, y: -30, duration: 0.4, ease: 'power3.in' }, 0)
+      .to('.splash-orbit-ring-wrap', { opacity: 0, duration: 0.3, ease: 'power3.in' }, 0)
+      // Curtains part — slow, cinematic
+      .to('.splash-left',  { xPercent: -100, duration: 1.2, ease: 'power3.inOut' }, 0.25)
+      .to('.splash-right', { xPercent:  100, duration: 1.2, ease: 'power3.inOut' }, 0.25)
+      .to('.splash-vignette', { opacity: 0, duration: 0.5, ease: 'none' }, 0.3)
+      // Reveal text — staggered, elegant
+      .to('.splash-reveal-overline', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 0.9)
+      .to('.splash-reveal-rule',     { scaleX: 1, duration: 0.4, ease: 'power2.out' }, 1.0)
+      .to('.splash-reveal-title',    { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 1.1)
+      .to('.splash-reveal-subtitle', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 1.35)
+      .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.4, ease: 'none' }, 1.6);
   }
 
   function dismissOnKey(e) { if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') dismissSplash(e); }
