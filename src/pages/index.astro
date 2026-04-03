@@ -1965,6 +1965,7 @@ function mobileEvents(events, max) {
 var FRED_DOLLAR = [], FRED_GOLD = [], FRED_OIL = [], FRED_TREASURY = [], FRED_VIX = [], FRED_FOREX = [];
 var _fullData = {};
 var _ranges = {};
+var _fredReady = null; // Promise that resolves when FRED data is loaded
 var CHART_REDRAW = {};
 
 // Value formatters for the latest-value badge
@@ -2207,7 +2208,17 @@ async function generateEraIntel() {
   btn.classList.add('generating');
   btn.textContent = '⟳ Generating Intelligence…';
 
-  // Build dynamic data summaries from actual chart data
+  // Wait for FRED data if it hasn't loaded yet
+  const dataKeys = ['dollar','gold','oil','treasury','vix','forex'];
+  const hasData = dataKeys.some(k => _fullData[k] && _fullData[k].length);
+  if (!hasData && _fredReady) {
+    btn.textContent = '⟳ Waiting for FRED data…';
+    try { await _fredReady; } catch(e) { /* fallback below */ }
+    // Small extra delay for loaders to populate _fullData
+    await new Promise(r => setTimeout(r, 500));
+  }
+
+  // Build dynamic data summaries from full (unfiltered) FRED data
   function summariseSeries(label, arr) {
     if (!arr || arr.length === 0) return label + ': no data available';
     const sorted = [...arr].sort((a, b) => a.year - b.year);
@@ -2223,28 +2234,28 @@ async function generateEraIntel() {
   }
 
   let dollarSummary = 'Dollar Index: not yet loaded';
-  if (_chartData.dollar) {
-    dollarSummary = 'U.S. Dollar Index (Trade-Weighted):\n  ' + summariseSeries('USD Index', _chartData.dollar);
+  if (_fullData.dollar && _fullData.dollar.length) {
+    dollarSummary = 'U.S. Dollar Index (Trade-Weighted):\n  ' + summariseSeries('USD Index', _fullData.dollar);
   }
   let goldSummary = 'Gold Price: not yet loaded';
-  if (_chartData.gold) {
-    goldSummary = 'Gold Spot Price (USD/troy oz):\n  ' + summariseSeries('Gold', _chartData.gold);
+  if (_fullData.gold && _fullData.gold.length) {
+    goldSummary = 'Gold Spot Price (USD/troy oz):\n  ' + summariseSeries('Gold', _fullData.gold);
   }
   let oilSummary = 'Oil Prices: not yet loaded';
-  if (_chartData.oil) {
-    oilSummary = 'Brent Crude Oil ($/barrel):\n  ' + summariseSeries('Brent Crude', _chartData.oil);
+  if (_fullData.oil && _fullData.oil.length) {
+    oilSummary = 'Brent Crude Oil ($/barrel):\n  ' + summariseSeries('Brent Crude', _fullData.oil);
   }
   let treasurySummary = 'Treasury Spread: not yet loaded';
-  if (_chartData.treasury) {
-    treasurySummary = '10Y-2Y Treasury Yield Spread (%):\n  ' + summariseSeries('Spread', _chartData.treasury);
+  if (_fullData.treasury && _fullData.treasury.length) {
+    treasurySummary = '10Y-2Y Treasury Yield Spread (%):\n  ' + summariseSeries('Spread', _fullData.treasury);
   }
   let vixSummary = 'VIX: not yet loaded';
-  if (_chartData.vix) {
-    vixSummary = 'CBOE Volatility Index (VIX):\n  ' + summariseSeries('VIX', _chartData.vix);
+  if (_fullData.vix && _fullData.vix.length) {
+    vixSummary = 'CBOE Volatility Index (VIX):\n  ' + summariseSeries('VIX', _fullData.vix);
   }
   let forexSummary = 'USD/EUR Forex: not yet loaded';
-  if (_chartData.forex) {
-    forexSummary = 'USD/EUR Exchange Rate (Alpha Vantage):\n  ' + summariseSeries('USD/EUR', _chartData.forex);
+  if (_fullData.forex && _fullData.forex.length) {
+    forexSummary = 'USD/EUR Exchange Rate (Alpha Vantage):\n  ' + summariseSeries('USD/EUR', _fullData.forex);
   }
 
   const eraKeys = ['romana', 'song', 'renaissance', 'dutch', 'golden', 'nineties'];
@@ -2365,7 +2376,7 @@ function loadAllRealCharts() {
     var statusId = ['dollar','gold','oil','treasury','vix','forex'][i] + '-status';
     setStatus(statusId, '⟳ Fetching live FRED data…', '');
   });
-  fetch('/api/fred?series=' + ids)
+  _fredReady = fetch('/api/fred?series=' + ids)
     .then(function(r) { return r.json(); })
     .then(function(json) {
       var src = json.fallback ? 'cached (build-time)' : 'live';
