@@ -616,16 +616,28 @@ const splash = document.getElementById('splash');
 if (splash) {
   let splashDismissed = false;
 
+  // Block ALL scroll during animation so momentum doesn't move the page
+  function blockScroll(e) { e.preventDefault(); }
+
   function dismissSplash(e) {
     if (splashDismissed) return;
     splashDismissed = true;
-    // Eat the triggering scroll so the page doesn't move
     if (e && e.preventDefault) e.preventDefault();
     window.removeEventListener('wheel', dismissSplash, { capture: true });
     window.removeEventListener('touchmove', dismissSplash, { capture: true });
     window.removeEventListener('keydown', dismissOnKey, { capture: true });
 
-    const tl = gsap.timeline();
+    // Freeze scroll for the duration of the animation
+    window.addEventListener('wheel', blockScroll, { capture: true, passive: false });
+    window.addEventListener('touchmove', blockScroll, { capture: true, passive: false });
+
+    const tl = gsap.timeline({
+      onComplete: function() {
+        // Unfreeze scroll after animation finishes
+        window.removeEventListener('wheel', blockScroll, { capture: true });
+        window.removeEventListener('touchmove', blockScroll, { capture: true });
+      }
+    });
     tl
       .to('.splash-scroll-cue', { opacity: 0, duration: 0.15, ease: 'none' }, 0)
       .to('.splash-title-wrap', { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power2.in' }, 0)
@@ -641,7 +653,7 @@ if (splash) {
       .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.25, ease: 'none' }, 0.9);
   }
 
-  function dismissOnKey(e) { if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') dismissSplash(); }
+  function dismissOnKey(e) { if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') dismissSplash(e); }
 
   // Wait 1.2s so user sees the splash before we listen
   setTimeout(function() {
