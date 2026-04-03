@@ -611,33 +611,53 @@ function euclideanDist(a, b) {
 // =========================================================
 gsap.registerPlugin(ScrollTrigger);
 
-// Splash — curtain open/close tied to scroll position
+// Splash — curtain open/close
 const splash = document.getElementById('splash');
 if (splash) {
-  // Force scroll to top immediately — prevents mobile restoring old position
+  // Force scroll to top — prevents mobile restoring old position
   window.scrollTo(0, 0);
-  // overflow:hidden is set in CSS on <html> — physically can't scroll yet
+  // Lock scroll until first curtain open completes
+  document.documentElement.style.overflow = 'hidden';
 
   let firstOpenDone = false;
+  let curtainsOpen = false;
+  let animating = false;
 
-  // Build the timeline ONCE — paused, so we control when it plays
+  // Build the timeline ONCE — paused, we control play/reverse
   const curtainTL = gsap.timeline({ paused: true });
   curtainTL
-    // Fade out title + cue
     .to('.splash-scroll-cue', { opacity: 0, duration: 0.2, ease: 'none' }, 0)
     .to('.splash-title-wrap', { opacity: 0, y: -30, duration: 0.4, ease: 'power3.in' }, 0)
     .to('.splash-orbit', { opacity: 0, y: -30, duration: 0.4, ease: 'power3.in' }, 0)
     .to('.splash-orbit-ring-wrap', { opacity: 0, duration: 0.3, ease: 'power3.in' }, 0)
-    // Curtains part — slow, cinematic
     .to('.splash-left',  { xPercent: -100, duration: 1.2, ease: 'power3.inOut' }, 0.25)
     .to('.splash-right', { xPercent:  100, duration: 1.2, ease: 'power3.inOut' }, 0.25)
     .to('.splash-vignette', { opacity: 0, duration: 0.5, ease: 'none' }, 0.3)
-    // Reveal text — staggered, elegant
     .to('.splash-reveal-overline', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 0.9)
     .to('.splash-reveal-rule',     { scaleX: 1, duration: 0.4, ease: 'power2.out' }, 1.0)
     .to('.splash-reveal-title',    { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' }, 1.1)
     .to('.splash-reveal-subtitle', { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 1.35)
     .to('.splash-reveal-scroll',   { opacity: 1, duration: 0.4, ease: 'none' }, 1.6);
+
+  function openCurtains() {
+    if (curtainsOpen || animating) return;
+    animating = true;
+    curtainTL.play();
+    curtainTL.eventCallback('onComplete', function() {
+      curtainsOpen = true;
+      animating = false;
+    });
+  }
+
+  function closeCurtains() {
+    if (!curtainsOpen || animating) return;
+    animating = true;
+    curtainTL.reverse();
+    curtainTL.eventCallback('onReverseComplete', function() {
+      curtainsOpen = false;
+      animating = false;
+    });
+  }
 
   function firstOpen(e) {
     if (firstOpenDone) return;
@@ -647,30 +667,26 @@ if (splash) {
     window.removeEventListener('touchmove', firstOpen, { capture: true });
     window.removeEventListener('keydown', firstOpenKey, { capture: true });
 
-    // Play the curtain open animation
+    animating = true;
     curtainTL.play();
     curtainTL.eventCallback('onComplete', function() {
-      // Unlock scroll
+      curtainsOpen = true;
+      animating = false;
+      // Unlock scroll NOW
       document.documentElement.style.overflow = '';
 
-      // Watch scroll position — when user scrolls back near top, close curtains
-      ScrollTrigger.create({
-        trigger: '#splash',
-        start: 'top top',         // splash top at viewport top
-        end: 'bottom top',        // splash bottom at viewport top (i.e. scrolled past it)
-        onEnter: function() {
-          // User is inside the splash zone — close curtains
-          curtainTL.reverse();
-        },
-        onEnterBack: function() {
-          // Scrolling back up into splash — close curtains
-          curtainTL.reverse();
-        },
-        onLeave: function() {
-          // Scrolled past splash downward — open curtains
-          if (curtainTL.reversed()) curtainTL.play();
+      // Simple scroll listener for scroll-back close/reopen
+      let splashH = splash.offsetHeight;
+      window.addEventListener('scroll', function() {
+        var y = window.scrollY || window.pageYOffset;
+        if (y < splashH * 0.3 && curtainsOpen && !animating) {
+          // User scrolled back near the top — close curtains
+          closeCurtains();
+        } else if (y >= splashH * 0.5 && !curtainsOpen && !animating) {
+          // User scrolled past splash — reopen curtains
+          openCurtains();
         }
-      });
+      }, { passive: true });
     });
   }
 

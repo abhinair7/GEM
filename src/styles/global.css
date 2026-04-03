@@ -24,7 +24,7 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 ::selection { background: rgba(197, 160, 89, 0.25); color: #1a1c1b; }
-html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--surface-high) var(--bg); overflow: hidden; }
+html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--surface-high) var(--bg); }
 body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--on-surface); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
 
 
