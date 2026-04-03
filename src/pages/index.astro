@@ -753,74 +753,105 @@ function isRelevantTitle(title) {
   return GDELT_KEYWORDS.some(function(kw) { return t.indexOf(kw) >= 0; });
 }
 
-function fetchGNews() {
-  document.getElementById('feed-source-tag').textContent = '⟳ Fetching live intel…';
-  var newsUrl = '/api/news?t=' + Date.now();
-  fetch(newsUrl)
+// --- Continuous live news ticker ---
+const _seenUrls = new Set();
+const collectedHeadlines = [];
+let _dripQueue = [];
+let _dripping = false;
+let _feedPollTimer = null;
+const POLL_INTERVAL = 30000; // 30 seconds between fetches
+const DRIP_INTERVAL = 1800;  // 1.8s between items appearing
+
+function toEST(isoStr) {
+  if (!isoStr) return null;
+  try {
+    const d = new Date(isoStr);
+    if (isNaN(d)) return null;
+    return d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true, timeZone:'America/New_York' }) + ' EST';
+  } catch { return null; }
+}
+
+function updateLiveClock() {
+  const now = new Date();
+  const est = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true, timeZone:'America/New_York' });
+  document.getElementById('feed-timestamp').textContent = est + ' EST';
+}
+
+function dripNext() {
+  if (_dripQueue.length === 0) { _dripping = false; return; }
+  _dripping = true;
+  const art = _dripQueue.shift();
+  const time = toEST(art.time) || toEST(new Date().toISOString());
+  collectedHeadlines.push(art.title);
+  const impacts = classifyArticle(art.title);
+  addFeedItem(time, art.title, art.desc, impacts, true, art.url);
+  // Cap feed at 20 items visually
+  const stream = document.getElementById('feed-stream');
+  while (stream.children.length > 20) stream.removeChild(stream.lastChild);
+  setTimeout(dripNext, DRIP_INTERVAL);
+}
+
+function fetchLiveNews() {
+  var tag = document.getElementById('feed-source-tag');
+  fetch('/api/news?t=' + Date.now())
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      var articles = (data.articles || []).slice(0, 8);
-      if (articles.length >= 2) {
-        document.getElementById('feed-source-tag').textContent = 'GDELT API — LIVE';
-        dripArticles(articles);
-      } else {
-        console.log('Insufficient GDELT articles — using simulated feed');
-        document.getElementById('feed-source-tag').textContent = 'SIMULATED SCENARIO';
-        loadFallback();
+      var articles = (data.articles || []);
+      if (articles.length === 0) {
+        if (_seenUrls.size === 0) { tag.textContent = 'SIMULATED SCENARIO'; loadFallback(); }
+        return;
+      }
+      tag.textContent = 'GDELT API — LIVE';
+      // Deduplicate — only queue truly new articles
+      var newArts = articles.filter(function(a) { return a.url && !_seenUrls.has(a.url); });
+      newArts.forEach(function(a) { _seenUrls.add(a.url); });
+      if (newArts.length > 0) {
+        _dripQueue = _dripQueue.concat(newArts);
+        if (!_dripping) dripNext();
+      }
+      // Trigger briefing once we have enough
+      if (!_briefingDone && collectedHeadlines.length >= 3) {
+        _briefingDone = true;
+        queueAICall(function() { generateBriefing(collectedHeadlines); });
       }
     })
     .catch(function(err) {
       console.error('News fetch error:', err);
-      document.getElementById('feed-source-tag').textContent = 'SIMULATED SCENARIO';
-      loadFallback();
+      if (_seenUrls.size === 0) { tag.textContent = 'SIMULATED SCENARIO'; loadFallback(); }
     });
 }
-
-// Drip-feed live articles one by one
-const collectedHeadlines = [];
-function dripArticles(articles) {
-  let idx = 0;
-  function drip() {
-    if (idx >= articles.length) {
-      // All articles loaded — trigger AI briefing
-      if (collectedHeadlines.length >= 3) queueAICall(() => generateBriefing(collectedHeadlines));
-      return;
-    }
-    const art = articles[idx];
-    let time = 'LIVE';
-    if (art.time) {
-      const d = new Date(art.time);
-      if (!isNaN(d)) {
-        const est = d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'America/New_York' });
-        time = est + ' EST';
-      }
-    }
-    collectedHeadlines.push(art.title);
-    const impacts = classifyArticle(art.title);
-    addFeedItem(time, art.title, art.desc, impacts, true, art.url);
-    idx++;
-    if (idx < articles.length) setTimeout(drip, 2500);
-    else if (collectedHeadlines.length >= 3) queueAICall(() => generateBriefing(collectedHeadlines));
-  }
-  drip();
-}
+var _briefingDone = false;
 
 function loadFallback() {
   let idx = 0;
   function drip() {
     if (idx >= fallbackEvents.length) return;
     const ev = fallbackEvents[idx];
-    addFeedItem(ev.time, ev.title, ev.desc, ev.impacts, false);
+    const now = new Date();
+    // Generate EST time offset from now for fallback items
+    const fakeTime = new Date(now.getTime() - (fallbackEvents.length - idx) * 600000);
+    const estTime = toEST(fakeTime.toISOString());
+    addFeedItem(estTime || ev.time, ev.title, ev.desc, ev.impacts, false);
     idx++;
     if (idx < fallbackEvents.length) setTimeout(drip, 2200);
   }
   drip();
 }
 
+function startLiveFeed() {
+  // Start live clock
+  updateLiveClock();
+  setInterval(updateLiveClock, 1000);
+  // First fetch immediately
+  fetchLiveNews();
+  // Then poll every 30s for new articles
+  _feedPollTimer = setInterval(fetchLiveNews, POLL_INTERVAL);
+}
+
 let feedStarted = false;
 ScrollTrigger.create({
   trigger: '#livefeed', start: 'top 70%',
-  onEnter: () => { if (!feedStarted) { feedStarted = true; fetchGNews(); } }
+  onEnter: () => { if (!feedStarted) { feedStarted = true; startLiveFeed(); } }
 });
 
 document.getElementById('apply-to-sim').addEventListener('click', () => {

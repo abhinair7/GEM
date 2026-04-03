@@ -106,7 +106,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120', // 1-min cache for freshness
+        'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60', // 30s cache for live ticker
       },
     });
   } catch (e: any) {
