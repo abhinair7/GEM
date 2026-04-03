@@ -616,9 +616,11 @@ const splash = document.getElementById('splash');
 if (splash) {
   let splashDismissed = false;
 
-  function dismissSplash() {
+  function dismissSplash(e) {
     if (splashDismissed) return;
     splashDismissed = true;
+    // Eat the triggering scroll so the page doesn't move
+    if (e && e.preventDefault) e.preventDefault();
     window.removeEventListener('wheel', dismissSplash, { capture: true });
     window.removeEventListener('touchmove', dismissSplash, { capture: true });
     window.removeEventListener('keydown', dismissOnKey, { capture: true });
@@ -644,8 +646,8 @@ if (splash) {
   // Wait 1.2s so user sees the splash before we listen
   setTimeout(function() {
     if (splashDismissed) return;
-    window.addEventListener('wheel', dismissSplash, { capture: true, passive: true, once: true });
-    window.addEventListener('touchmove', dismissSplash, { capture: true, passive: true, once: true });
+    window.addEventListener('wheel', dismissSplash, { capture: true, passive: false, once: true });
+    window.addEventListener('touchmove', dismissSplash, { capture: true, passive: false, once: true });
     window.addEventListener('keydown', dismissOnKey, { capture: true });
   }, 1200);
 }
