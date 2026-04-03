@@ -653,17 +653,21 @@ if (splash) {
       // Unlock scroll
       document.documentElement.style.overflow = '';
 
-      // Now set up ScrollTrigger so scrolling back to top closes curtains
+      // Watch scroll position — when user scrolls back near top, close curtains
       ScrollTrigger.create({
         trigger: '#splash',
-        start: 'bottom 90%',   // when splash bottom is near viewport bottom (user scrolled it mostly out)
-        end: 'bottom 10%',
+        start: 'top top',         // splash top at viewport top
+        end: 'bottom top',        // splash bottom at viewport top (i.e. scrolled past it)
+        onEnter: function() {
+          // User is inside the splash zone — close curtains
+          curtainTL.reverse();
+        },
         onEnterBack: function() {
           // Scrolling back up into splash — close curtains
           curtainTL.reverse();
         },
         onLeave: function() {
-          // Scrolling past splash downward — ensure curtains are open
+          // Scrolled past splash downward — open curtains
           if (curtainTL.reversed()) curtainTL.play();
         }
       });
