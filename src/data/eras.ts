@@ -6,7 +6,7 @@ export const eraProfiles = {
   romana:      { trade: 0.82, politics: 0.90, security: 0.88, benefit: 0.25 },
   song:        { trade: 0.75, politics: 0.60, security: 0.35, benefit: 0.55 },
   renaissance: { trade: 0.90, politics: 0.30, security: 0.40, benefit: 0.18 },
-  twenties:    { trade: 0.65, politics: 0.50, security: 0.70, benefit: 0.12 },
+  dutch:       { trade: 0.92, politics: 0.65, security: 0.55, benefit: 0.30 },
   golden:      { trade: 0.60, politics: 0.85, security: 0.90, benefit: 0.72 },
   nineties:    { trade: 0.95, politics: 0.55, security: 0.65, benefit: 0.45 },
 };
@@ -45,15 +45,15 @@ export const eraInfo = {
       { title: 'Intelligence Networks', desc: 'Invest in diplomatic intelligence and back-channel negotiations. Information asymmetry over brute force.' },
     ],
   },
-  twenties: {
-    name: 'Roaring Twenties',
-    date: '1920s USA · The Industrial Mirage',
-    desc: 'Massive industrial output and speculative growth with dangerously concentrated benefits. Prosperity is explosive but fragile — built on oil, mass production, and media narratives.',
-    playbook: 'U.S.–Iran Strategic Playbook: The Industrial Strategy',
+  dutch: {
+    name: 'Dutch Golden Age',
+    date: '1580 – 1672 AD · The Market Revolution',
+    desc: 'The Dutch invented modern capitalism: stock exchanges, central banking, joint-stock companies, and maritime insurance. Prosperity flowed through financial innovation, religious tolerance attracting talent, and naval trade dominance — without a large standing army.',
+    playbook: 'U.S.–Iran Strategic Playbook: The Dutch Strategy',
     strategies: [
-      { title: 'Oil Market Control', desc: 'Dominate global energy markets through production manipulation and strategic reserves. Oil pricing = direct leverage.' },
-      { title: 'Industrial Pressure', desc: 'Restrict access to industrial technology, manufacturing equipment, and supply chains.' },
-      { title: 'Narrative Warfare', desc: 'Use mass media and public narrative to shape domestic and international opinion.' },
+      { title: 'Financial Innovation', desc: 'Weaponise the financial system — use SWIFT exclusion, dollar hegemony, and capital market access as primary coercive tools. The Dutch proved that financial architecture beats military spending.' },
+      { title: 'Talent Attraction', desc: 'Position as a haven for skilled dissidents and professionals fleeing Iranian brain drain. The Dutch thrived by absorbing Sephardic Jews, Huguenots, and Flemish merchants — talent others expelled.' },
+      { title: 'Maritime Chokepoints', desc: 'Control shipping lanes and insurance markets. The VOC model — dominate trade infrastructure rather than territory. Whoever controls the Strait of Hormuz controls the premium.' },
     ],
   },
   golden: {
@@ -84,7 +84,7 @@ export const eraColors = {
   romana: '#8b6914',
   song: '#2d6e5f',
   renaissance: '#c5a059',
-  twenties: '#c4442d',
+  dutch: '#e67e22',
   golden: '#44474e',
   nineties: '#1a1c1b',
 };
@@ -104,7 +104,7 @@ export const historicalData = [
   { era: 'Pax Romana', period: '27 BC–180 AD', gdp: '$570', trade: '18%', military: '2.5%', gini: '0.42', urban: '28%', duration: '207', pop: '55' },
   { era: 'Song Dynasty', period: '960–1279', gdp: '$600', trade: '22%', military: '6.0%', gini: '0.38', urban: '22%', duration: '319', pop: '100' },
   { era: 'Italian Renaissance', period: '1450–1600', gdp: '$1,100', trade: '35%', military: '3.5%', gini: '0.52', urban: '34%', duration: '150', pop: '12' },
-  { era: 'Roaring Twenties', period: '1920–1929', gdp: '$5,900', trade: '12%', military: '1.2%', gini: '0.56', urban: '52%', duration: '9', pop: '106' },
+  { era: 'Dutch Golden Age', period: '1580–1672', gdp: '$2,130', trade: '68%', military: '4.8%', gini: '0.44', urban: '45%', duration: '92', pop: '2' },
   { era: 'Golden Age USA', period: '1947–1973', gdp: '$9,600', trade: '8%', military: '8.9%', gini: '0.35', urban: '64%', duration: '26', pop: '180' },
   { era: 'Information Age', period: '1991–2001', gdp: '$23,200', trade: '24%', military: '3.4%', gini: '0.41', urban: '77%', duration: '10', pop: '275' },
 ];
@@ -113,7 +113,7 @@ export const eraCards = [
   { key: 'romana', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&q=80', date: '27 BC – 180 AD', title: 'Pax Romana', pillars: 'Imperial influence, trade security, strategic route control', winner: 'Winning Layer: Imperial Elites', figure: '/figures/augustus.jpg', figureName: 'Augustus', symbol: 'The Imperial Laurel Wreath', symbolDesc: 'Imperial Stability & Strategic Control' },
   { key: 'song', image: 'https://images.unsplash.com/photo-1547981609-4b6bfe67ca0b?w=600&q=80', date: '960 – 1279 AD', title: 'Song Dynasty', pillars: 'State capacity, containment, commerce despite threats', winner: 'Winning Layer: Gentry Scholars', figure: '/figures/taizu.jpg', figureName: 'Emperor Taizu', symbol: 'The Jiaozi', symbolDesc: 'Commercial Fluency & Sophisticated Economics' },
   { key: 'renaissance', image: 'https://images.unsplash.com/photo-1541370976299-4d24ebbc9077?w=600&q=80', date: '1450 – 1600 AD', title: 'Italian Renaissance', pillars: 'Balance of power, shipping routes, finance as weapon', winner: 'Winning Layer: Merchant Princes', figure: '/figures/medici.jpg', figureName: 'Lorenzo de\' Medici', symbol: 'The Banking Ledger', symbolDesc: 'The Strategic Value of Finance' },
-  { key: 'twenties', image: 'https://images.unsplash.com/photo-1518391846015-55a9cc003b25?w=600&q=80', date: '1920s USA', title: 'Roaring Twenties', pillars: 'Industrial power, oil markets, media narratives', winner: 'Winning Layer: Industrial Titans', figure: '/figures/coolidge.jpg', figureName: 'Calvin Coolidge', symbol: 'The Stock Ticker', symbolDesc: 'Industrial Output & Speculative Growth' },
+  { key: 'dutch', image: '/dutch-canal.jpg', date: '1580 – 1672 AD', title: 'Dutch Golden Age', pillars: 'Financial innovation, trade monopoly, talent attraction', winner: 'Winning Layer: Merchant Capitalists', figure: '/figures/dutch.jpg', figureName: 'Johan de Witt', symbol: 'The VOC Seal', symbolDesc: 'Market Capitalism & Financial Architecture' },
   { key: 'golden', image: 'https://images.unsplash.com/photo-1569317002804-ab77bcf1bce4?w=600&q=80', date: '1950s USA', title: 'The Golden Age', pillars: 'Cold War containment, alliance discipline, global order', winner: 'Winning Layer: Corporate Middle Class', figure: '/figures/eisenhower.jpg', figureName: 'Dwight D. Eisenhower', symbol: 'Alliance Plans', symbolDesc: 'Alliance Discipline & Global Containment' },
   { key: 'nineties', image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&q=80', date: '1990s Global', title: 'The Information Age', pillars: 'Globalisation, multilateral sanctions, info warfare', winner: 'Winning Layer: Global Technocrats', figure: '/figures/nineties.jpg', figureName: 'The Network Architect', symbol: 'The Fiber Optic Web', symbolDesc: 'Technological Acceleration & Information Warfare' },
 ];
@@ -122,7 +122,7 @@ export const fragilityCards = [
   { era: 'Pax Romana', label: 'Classical Imperial', desc: "Trade route brittleness — prosperity collapses if maritime security degrades. Over-reliance on military spending creates fiscal fragility." },
   { era: 'Song Dynasty', label: 'Feudal Innovation', desc: 'Zero military scalability — economic gains cannot compensate for existential security threats. Innovation without force projection invites conquest.' },
   { era: 'Italian Renaissance', label: 'Mercantile Finance', desc: 'Currency and credit fragility — financial dominance without territorial control creates cascading collapse risk when confidence erodes.' },
-  { era: 'Roaring Twenties', label: 'Industrial Leviathan', desc: 'Social volatility — mass production concentrates wealth at the top, creating speculative bubbles that can implode overnight.' },
+  { era: 'Dutch Golden Age', label: 'Market Capitalism', desc: 'Financial contagion risk — prosperity built on speculative instruments (tulip mania, VOC shares) can unravel when market confidence breaks. Small population means no strategic depth against larger powers.' },
   { era: 'Golden Age USA', label: 'Cold War Discipline', desc: 'Alliance fatigue — maintaining bloc cohesion requires constant investment. Defection from the structure erodes the entire model.' },
   { era: 'Information Age', label: 'Globalist Network', desc: 'Asymmetric vulnerability — hyper-connectivity means a single node failure propagates system-wide disruption at unprecedented speed.' },
 ];
@@ -131,7 +131,7 @@ export const lifecycleCurves = {
   romana:      { color: '#8b6914', pts: [[0,0.1],[10,0.3],[25,0.6],[40,0.85],[55,0.95],[70,0.9],[80,0.7],[90,0.4],[100,0.15]], label: 'Pax Romana' },
   song:        { color: '#2d6e5f', pts: [[0,0.05],[15,0.25],[30,0.55],[45,0.8],[60,0.92],[70,0.88],[80,0.65],[90,0.3],[100,0.08]], label: 'Song Dynasty' },
   renaissance: { color: '#c5a059', pts: [[0,0.08],[10,0.35],[20,0.65],[35,0.9],[50,0.98],[60,0.85],[75,0.5],[90,0.2],[100,0.05]], label: 'Renaissance' },
-  twenties:    { color: '#c4442d', pts: [[0,0.15],[15,0.45],[30,0.75],[50,0.95],[60,0.98],[65,0.6],[70,0.2],[80,0.08],[100,0.05]], label: '1920s (Crash)' },
+  dutch:       { color: '#e67e22', pts: [[0,0.08],[10,0.25],[20,0.5],[35,0.75],[50,0.88],[60,0.95],[70,0.92],[80,0.78],[90,0.5],[100,0.2]], label: 'Dutch Republic' },
   golden:      { color: '#44474e', pts: [[0,0.1],[10,0.3],[25,0.55],[40,0.75],[55,0.88],[70,0.92],[80,0.85],[90,0.7],[100,0.55]], label: '1950s Golden' },
   nineties:    { color: '#1a1c1b', pts: [[0,0.2],[10,0.4],[25,0.6],[40,0.8],[55,0.92],[65,0.95],[75,0.88],[85,0.72],[100,0.6]], label: '1990s Info Age' },
 };

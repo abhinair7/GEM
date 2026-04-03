@@ -89,7 +89,7 @@ function today(): string {
 async function fetchViaApi(id: string): Promise<DataPoint[]> {
   const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_API_KEY}&file_type=json&observation_start=2020-01-01&observation_end=${today()}`;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000);
+  const timer = setTimeout(() => controller.abort(), 8000);
   try {
     const resp = await fetch(url, { signal: controller.signal });
     if (!resp.ok) throw new Error(`FRED API HTTP ${resp.status} for ${id}`);
@@ -103,7 +103,7 @@ async function fetchViaApi(id: string): Promise<DataPoint[]> {
 async function fetchViaCsv(id: string): Promise<DataPoint[]> {
   const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${id}&cosd=2020-01-01&coed=${today()}`;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15000); // 15s timeout (was 8s)
+  const timer = setTimeout(() => controller.abort(), 8000);
   try {
     const resp = await fetch(url, {
       signal: controller.signal,
@@ -125,16 +125,20 @@ async function fetchViaCsv(id: string): Promise<DataPoint[]> {
   }
 }
 
-/** Fetch a single series with retry (1 retry after 2s delay) */
-async function fetchSeries(id: string): Promise<DataPoint[]> {
+/** Fetch a single series — tries API/CSV, falls back to build-time data */
+async function fetchSeries(id: string): Promise<{ data: DataPoint[]; live: boolean }> {
   const fetcher = FRED_API_KEY ? fetchViaApi : fetchViaCsv;
   try {
-    return await fetcher(id);
-  } catch (firstErr) {
-    // Retry once after a short delay
-    await delay(2000);
-    return await fetcher(id);
+    const data = await fetcher(id);
+    if (data.length > 0) return { data, live: true };
+  } catch { /* fall through */ }
+  // Use build-time static data immediately (don't retry — saves time on Vercel)
+  const fallbackKey = SERIES_TO_FALLBACK[id];
+  const fallbackData = fallbackKey ? (fredFallback as any)[fallbackKey] : null;
+  if (fallbackData && fallbackData.length) {
+    return { data: fallbackData, live: false };
   }
+  throw new Error(`No data available for ${id}`);
 }
 
 export const GET: APIRoute = async ({ request }) => {
@@ -154,25 +158,18 @@ export const GET: APIRoute = async ({ request }) => {
   let usedFallback = false;
   const source = FRED_API_KEY ? 'api' : 'csv';
 
-  // Fetch sequentially with small delay to avoid rate-limiting
-  for (const id of seriesIds) {
-    try {
-      result[id.trim()] = await fetchSeries(id.trim());
-    } catch (e: any) {
-      // Use static fallback data when FRED is unreachable
-      const fallbackKey = SERIES_TO_FALLBACK[id.trim()];
-      const fallbackData = fallbackKey ? (fredFallback as any)[fallbackKey] : null;
-      if (fallbackData && fallbackData.length) {
-        result[id.trim()] = fallbackData;
-        usedFallback = true;
-      } else {
-        errors.push(`${id}: ${e.message}`);
-        result[id.trim()] = [];
-      }
-    }
-    // Small delay between requests to avoid FRED rate-limiting
-    if (seriesIds.indexOf(id) < seriesIds.length - 1) {
-      await delay(500);
+  // Fetch all series in parallel for speed (Vercel has ~10s timeout)
+  const results = await Promise.allSettled(
+    seriesIds.map(id => fetchSeries(id.trim()).then(res => ({ id: id.trim(), ...res })))
+  );
+
+  for (const r of results) {
+    if (r.status === 'fulfilled') {
+      result[r.value.id] = r.value.data;
+      if (!r.value.live) usedFallback = true;
+    } else {
+      const msg = r.reason?.message || 'Unknown error';
+      errors.push(msg);
     }
   }
 
@@ -180,7 +177,7 @@ export const GET: APIRoute = async ({ request }) => {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
+      'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800',
     },
   });
 };

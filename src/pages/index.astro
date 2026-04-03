@@ -44,21 +44,27 @@ const eraArtifacts: Record<string, string> = {
     <circle cx="35" cy="10" r="8" stroke-dasharray="2 3" opacity="0.4"/>
   </svg>`,
 
-  twenties: `<svg class="era-artifact-svg" viewBox="0 0 70 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M15 40 Q15 12 35 8 Q55 12 55 40" stroke-width="1.5"/>
-    <line x1="15" y1="40" x2="55" y2="40"/>
-    <path d="M25 40 Q25 20 35 16 Q45 20 45 40" opacity="0.4"/>
-    <line x1="35" y1="40" x2="35" y2="82"/>
-    <ellipse cx="35" cy="72" rx="3" ry="8" opacity="0.3" fill="currentColor"/>
-    <line x1="30" y1="82" x2="40" y2="82"/>
-    <line x1="28" y1="85" x2="42" y2="85"/>
-    <ellipse cx="35" cy="92" rx="16" ry="5"/>
-    <ellipse cx="35" cy="92" rx="16" ry="5" fill="currentColor" opacity="0.08"/>
-    <circle cx="28" cy="26" r="1.5" fill="currentColor" opacity="0.5"/>
-    <circle cx="38" cy="22" r="1" fill="currentColor" opacity="0.4"/>
-    <circle cx="33" cy="30" r="1.2" fill="currentColor" opacity="0.35"/>
-    <path d="M20 96 L20 100" opacity="0.3"/>
-    <path d="M50 96 L50 100" opacity="0.3"/>
+  dutch: `<svg class="era-artifact-svg" viewBox="0 0 80 120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- VOC Ship Hull -->
+    <path d="M10 75 Q15 85 40 88 Q65 85 70 75" stroke-width="1.5"/>
+    <path d="M10 75 L15 70 Q40 65 65 70 L70 75" fill="currentColor" opacity="0.08"/>
+    <!-- Mast -->
+    <line x1="40" y1="20" x2="40" y2="75" stroke-width="1.5"/>
+    <!-- Sails -->
+    <path d="M40 22 Q55 30 52 42 L40 42" fill="currentColor" opacity="0.15" stroke-width="1"/>
+    <path d="M40 22 Q55 30 52 42 L40 42" stroke-width="1"/>
+    <path d="M40 44 Q58 52 54 62 L40 62" fill="currentColor" opacity="0.10" stroke-width="1"/>
+    <path d="M40 44 Q58 52 54 62 L40 62" stroke-width="1"/>
+    <!-- Flag -->
+    <path d="M40 18 L52 22 L40 26" fill="currentColor" opacity="0.3"/>
+    <!-- Rigging -->
+    <line x1="40" y1="22" x2="18" y2="68" stroke-dasharray="2 2" opacity="0.35"/>
+    <line x1="40" y1="22" x2="62" y2="68" stroke-dasharray="2 2" opacity="0.35"/>
+    <!-- Waves -->
+    <path d="M5 90 Q15 86 25 90 Q35 94 45 90 Q55 86 65 90 Q75 94 80 90" opacity="0.3"/>
+    <path d="M8 96 Q18 92 28 96 Q38 100 48 96 Q58 92 68 96" opacity="0.2"/>
+    <!-- VOC monogram -->
+    <text x="40" y="110" font-family="serif" font-size="12" font-weight="700" fill="currentColor" opacity="0.4" text-anchor="middle" stroke="none">VOC</text>
   </svg>`,
 
   golden: `<svg class="era-artifact-svg" viewBox="0 0 90 90" fill="none" stroke="currentColor" stroke-width="1.2">
@@ -104,6 +110,7 @@ const eraArtifacts: Record<string, string> = {
     <li><a href="#eras">Eras</a></li>
     <li><a href="#simulation">Simulate</a></li>
     <li><a href="#analysis">Analysis</a></li>
+    <li><a href="#era-intel">Intelligence</a></li>
   </ul>
   <div class="nav-status"><div class="status-dot"></div> Model Active</div>
 </nav>
@@ -121,8 +128,8 @@ const eraArtifacts: Record<string, string> = {
     <div class="splash-reveal-scroll"><div class="splash-reveal-scroll-line"></div> Scroll to explore</div>
   </div>
   <!-- Curtain halves — single img clipped, zero seam -->
-  <div class="splash-half splash-left"><img src="/architects.jpg" alt="" class="splash-img" /></div>
-  <div class="splash-half splash-right"><img src="/architects.jpg" alt="" class="splash-img" /></div>
+  <div class="splash-half splash-left"><img src="/architects.png" alt="" class="splash-img" /></div>
+  <div class="splash-half splash-right"><img src="/architects.png" alt="" class="splash-img" /></div>
   <div class="splash-vignette"></div>
   <div class="splash-title-wrap">
     <h1 class="splash-title">The Architects<br>of Prosperity</h1>
@@ -181,7 +188,7 @@ const eraArtifacts: Record<string, string> = {
         <h5>Triggered Era Shift</h5>
         <div class="shift-era" id="feed-era-name">Pax Romana</div>
         <div class="shift-era-sub" id="feed-era-sub">High stability corridor — imperial logic active</div>
-        <button class="apply-feed-btn" id="apply-to-sim">Apply to Simulation Engine</button>
+        <button class="apply-feed-btn" id="apply-to-sim">Copy Feed to Sliders &rarr;</button>
       </div>
     </div>
   </div>
@@ -431,9 +438,9 @@ const eraArtifacts: Record<string, string> = {
         <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#c5a059"></div><h4>Italian Renaissance</h4><span class="era-intel-period">1450 – 1600 AD</span></div>
         <div class="era-intel-body" id="intel-renaissance">Click <strong>Generate Era Intelligence</strong> above to begin.</div>
       </div>
-      <div class="era-intel-card" data-era="twenties">
-        <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#c4442d"></div><h4>Roaring Twenties</h4><span class="era-intel-period">1920s USA</span></div>
-        <div class="era-intel-body" id="intel-twenties">Click <strong>Generate Era Intelligence</strong> above to begin.</div>
+      <div class="era-intel-card" data-era="dutch">
+        <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#e67e22"></div><h4>Dutch Golden Age</h4><span class="era-intel-period">1580 – 1672 AD</span></div>
+        <div class="era-intel-body" id="intel-dutch">Click <strong>Generate Era Intelligence</strong> above to begin.</div>
       </div>
       <div class="era-intel-card" data-era="golden">
         <div class="era-intel-card-head"><div class="era-intel-era-dot" style="background:#44474e"></div><h4>Golden Age USA</h4><span class="era-intel-period">1950s USA</span></div>
@@ -449,8 +456,39 @@ const eraArtifacts: Record<string, string> = {
 
 <!-- Footer -->
 <footer>
-  <div class="brand">G<span>.</span>E<span>.</span>M</div>
-  <div class="meta">Geopolitical Equilibrium Model — Sovereign Intelligence Archive — Abhishek Nair</div>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="brand">G<span>.</span>E<span>.</span>M</div>
+      <div class="footer-tagline">Geopolitical Equilibrium Model</div>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <div class="footer-col-title">Navigate</div>
+        <a href="#thesis">Thesis</a>
+        <a href="#livefeed">Live Feed</a>
+        <a href="#eras">Eras</a>
+        <a href="#simulation">Simulate</a>
+        <a href="#analysis">Analysis</a>
+        <a href="#era-intel">Intelligence</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Connect</div>
+        <a href="https://linkedin.com/in/abhisheknair" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://github.com/abhisheknair" target="_blank" rel="noopener">GitHub</a>
+        <a href="mailto:abhishek@example.com">Email</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Data Sources</div>
+        <a href="https://fred.stlouisfed.org" target="_blank" rel="noopener">FRED API</a>
+        <a href="https://www.gdeltproject.org" target="_blank" rel="noopener">GDELT Project</a>
+        <a href="https://cerebras.ai" target="_blank" rel="noopener">Cerebras AI</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="meta">Sovereign Intelligence Archive — Abhishek Nair</div>
+    <div class="footer-tech">Built with Astro, Canvas 2D, GSAP & Cerebras AI</div>
+  </div>
 </footer>
 
 <!-- =========================================================
@@ -462,7 +500,7 @@ const eraProfiles = {
   romana: { trade: 0.82, politics: 0.90, security: 0.88, benefit: 0.25 },
   song: { trade: 0.75, politics: 0.60, security: 0.35, benefit: 0.55 },
   renaissance: { trade: 0.90, politics: 0.30, security: 0.40, benefit: 0.18 },
-  twenties: { trade: 0.65, politics: 0.50, security: 0.70, benefit: 0.12 },
+  dutch: { trade: 0.92, politics: 0.65, security: 0.55, benefit: 0.30 },
   golden: { trade: 0.60, politics: 0.85, security: 0.90, benefit: 0.72 },
   nineties: { trade: 0.95, politics: 0.55, security: 0.65, benefit: 0.45 },
 };
@@ -471,12 +509,12 @@ const eraInfo = {
   romana: { name: 'Pax Romana', date: '27 BC – 180 AD · The Antonine Prosperity', desc: 'Your configuration mirrors the Roman imperial model: high political stability with strong trade integration, where prosperity concentrates through controlled commerce and military-secured routes.', playbook: 'U.S.–Iran Strategic Playbook: The Roman Strategy', strategies: [{ title: 'Naval Presence', desc: "Project maritime dominance through carrier groups in the Persian Gulf — the modern Mare Nostrum. Control of the Strait of Hormuz mirrors Rome's control of Mediterranean choke points." }, { title: 'Economic Sanctions', desc: 'Deploy targeted sanctions modelled on the Roman siege economy. Restrict access to global banking, oil exports, and technology transfers.' }, { title: 'Regional Alliances', desc: 'Build a modern foederati network — binding regional allies (Gulf States, Israel) into a structured alliance of protection for trade access.' }] },
   song: { name: 'Song Dynasty', date: '960 – 1279 AD · The Innovation Paradox', desc: 'High innovation and trade sophistication offset by severe military vulnerability. Prosperity flows through state capacity and economic ingenuity, but the system is structurally fragile.', playbook: 'U.S.–Iran Strategic Playbook: The Song Strategy', strategies: [{ title: 'Economic Leverage', desc: "Use financial sophistication and trade dependency as primary tools. Restrict Iran's access to global capital markets while offering integration incentives." }, { title: 'Diplomatic Containment', desc: 'Avoid direct military confrontation. Build concentric rings of diplomatic pressure through multilateral frameworks.' }, { title: 'Innovation Shield', desc: 'Invest in technological superiority (cyber, energy tech) as a substitute for traditional military deterrence.' }] },
   renaissance: { name: 'Italian Renaissance', date: '1450 – 1600 AD · The Medici Architecture', desc: 'Extreme financial power amid political fragmentation. Prosperity concentrates where banking, trade routes, and information asymmetry converge.', playbook: 'U.S.–Iran Strategic Playbook: The Renaissance Strategy', strategies: [{ title: 'Financial Warfare', desc: 'Deploy the banking system as a strategic weapon — SWIFT restrictions, dollar-denominated trade barriers, and targeted asset freezes.' }, { title: 'Balance of Power', desc: 'Play regional powers against each other (Saudi, Turkey, Israel) to prevent any single actor from dominating.' }, { title: 'Intelligence Networks', desc: 'Invest in diplomatic intelligence and back-channel negotiations. Information asymmetry over brute force.' }] },
-  twenties: { name: 'Roaring Twenties', date: '1920s USA · The Industrial Mirage', desc: 'Massive industrial output and speculative growth with dangerously concentrated benefits. Prosperity is explosive but fragile — built on oil, mass production, and media narratives.', playbook: 'U.S.–Iran Strategic Playbook: The Industrial Strategy', strategies: [{ title: 'Oil Market Control', desc: 'Dominate global energy markets through production manipulation and strategic reserves. Oil pricing = direct leverage.' }, { title: 'Industrial Pressure', desc: 'Restrict access to industrial technology, manufacturing equipment, and supply chains.' }, { title: 'Narrative Warfare', desc: 'Use mass media and public narrative to shape domestic and international opinion.' }] },
+  dutch: { name: 'Dutch Golden Age', date: '1580 – 1672 AD · The Market Revolution', desc: 'The Dutch invented modern capitalism: stock exchanges, central banking, joint-stock companies, and maritime insurance. Prosperity flowed through financial innovation, religious tolerance attracting talent, and naval trade dominance — without a large standing army.', playbook: 'U.S.–Iran Strategic Playbook: The Dutch Strategy', strategies: [{ title: 'Financial Innovation', desc: 'Weaponise the financial system — use SWIFT exclusion, dollar hegemony, and capital market access as primary coercive tools. The Dutch proved that financial architecture beats military spending.' }, { title: 'Talent Attraction', desc: 'Position as a haven for skilled dissidents and professionals fleeing Iranian brain drain. The Dutch thrived by absorbing Sephardic Jews, Huguenots, and Flemish merchants — talent others expelled.' }, { title: 'Maritime Chokepoints', desc: 'Control shipping lanes and insurance markets. The VOC model — dominate trade infrastructure rather than territory. Whoever controls the Strait of Hormuz controls the premium.' }] },
   golden: { name: 'Golden Age USA', date: '1950s USA · The Containment Architecture', desc: 'Strong alliance discipline, broad middle-class prosperity, and military dominance to maintain global order. The most balanced architecture.', playbook: 'U.S.–Iran Strategic Playbook: The Containment Strategy', strategies: [{ title: 'Bloc Discipline', desc: 'Strengthen the Western alliance — NATO expansion, bilateral defense pacts, intelligence sharing.' }, { title: 'Ideological Framing', desc: 'Frame the conflict as a values competition (democracy vs. theocracy) for domestic support and allied unity.' }, { title: 'Proxy Architecture', desc: 'Support regional partners as forward-deployed assets without direct engagement.' }] },
   nineties: { name: 'The Information Age', date: '1990s Global · The Uni-polar Moment', desc: 'High trade integration, information acceleration, and multilateral frameworks. Prosperity flows through network effects but is vulnerable to asymmetric disruption.', playbook: 'U.S.–Iran Strategic Playbook: The Information Strategy', strategies: [{ title: 'Multilateral Sanctions', desc: 'Build broad international coalitions — legitimacy through UN resolutions and allied consensus.' }, { title: 'Information Warfare', desc: 'Deploy cyber operations, media pressure, and strategic communications to shape the environment.' }, { title: 'Globalisation Leverage', desc: "Use Iran's dependence on global trade networks as the ultimate coercive tool." }] },
 };
 
-const eraColors = { romana: '#8b6914', song: '#2d6e5f', renaissance: '#c5a059', twenties: '#c4442d', golden: '#44474e', nineties: '#1a1c1b' };
+const eraColors = { romana: '#8b6914', song: '#2d6e5f', renaissance: '#c5a059', dutch: '#e67e22', golden: '#44474e', nineties: '#1a1c1b' };
 
 // =========================================================
 // CEREBRAS AI ENGINE
@@ -705,23 +743,49 @@ const fallbackEvents = [
   { time: '04:45 UTC', title: 'European Parliament Calls for Renewed JCPOA Talks', desc: 'Non-binding resolution 412-198 urging engagement. France and Germany willing to mediate.', impacts: [{ pillar:'politics', delta:0.07, label:'Politics' }, { pillar:'trade', delta:0.03, label:'Trade' }] },
 ];
 
-// News feed: fetch from /api/news (GDELT proxy) at runtime, fallback to simulated
+// News feed: fetch GDELT directly from client (no CORS issues, avoids Vercel 10s timeout)
+var GDELT_KEYWORDS = ['iran','tehran','persian','hormuz','irgc','sanction','nuclear','missile','military',
+  'oil','crude','opec','gulf','middle east','hezbollah','houthi','israel','drone','weapon',
+  'diplomacy','diplomat','conflict','escalat','ceasefire','war','attack','defense','uranium'];
+
+function isRelevantTitle(title) {
+  var t = title.toLowerCase();
+  return GDELT_KEYWORDS.some(function(kw) { return t.indexOf(kw) >= 0; });
+}
+
 function fetchGNews() {
   document.getElementById('feed-source-tag').textContent = '⟳ Fetching live intel…';
-  fetch('/api/news')
+  var gdeltUrl = 'https://api.gdeltproject.org/api/v2/doc/doc?query=iran%20sourcelang:english&mode=ArtList&maxrecords=15&format=json&sort=DateDesc';
+  fetch(gdeltUrl)
     .then(function(r) { return r.json(); })
-    .then(function(json) {
-      if (json.articles && json.articles.length >= 2) {
+    .then(function(data) {
+      var articles = (data.articles || [])
+        .filter(function(a) { return isRelevantTitle(a.title || ''); })
+        .slice(0, 8)
+        .map(function(a) {
+          var time = '';
+          if (a.seendate && a.seendate.length >= 15) {
+            time = a.seendate.slice(0,4)+'-'+a.seendate.slice(4,6)+'-'+a.seendate.slice(6,8)+'T'+
+                   a.seendate.slice(9,11)+':'+a.seendate.slice(11,13)+':'+a.seendate.slice(13,15)+'Z';
+          }
+          return {
+            title: (a.title || 'Untitled').replace(/ - [^-]+$/, ''),
+            desc: a.domain ? 'Source: ' + a.domain : '',
+            url: a.url || '',
+            time: time
+          };
+        });
+      if (articles.length >= 2) {
         document.getElementById('feed-source-tag').textContent = 'GDELT API — LIVE';
-        dripArticles(json.articles);
+        dripArticles(articles);
       } else {
-        console.log('No GDELT articles — using simulated feed');
+        console.log('Insufficient relevant GDELT articles — using simulated feed');
         document.getElementById('feed-source-tag').textContent = 'SIMULATED SCENARIO';
         loadFallback();
       }
     })
     .catch(function(err) {
-      console.error('News fetch error:', err);
+      console.error('GDELT fetch error:', err);
       document.getElementById('feed-source-tag').textContent = 'SIMULATED SCENARIO';
       loadFallback();
     });
@@ -733,6 +797,8 @@ function dripArticles(articles) {
   let idx = 0;
   function drip() {
     if (idx >= articles.length) {
+      // All articles loaded — trigger AI briefing
+      if (collectedHeadlines.length >= 3) queueAICall(() => generateBriefing(collectedHeadlines));
       return;
     }
     const art = articles[idx];
@@ -747,6 +813,7 @@ function dripArticles(articles) {
     addFeedItem(time, art.title, art.desc, impacts, true, art.url);
     idx++;
     if (idx < articles.length) setTimeout(drip, 2500);
+    else if (collectedHeadlines.length >= 3) queueAICall(() => generateBriefing(collectedHeadlines));
   }
   drip();
 }
@@ -1034,7 +1101,7 @@ function drawLifecycle() {
     romana: { color:'#8b6914', fill:'rgba(139,105,20,0.12)', pts: [[0,0.1],[10,0.3],[25,0.6],[40,0.85],[55,0.95],[70,0.9],[80,0.7],[90,0.4],[100,0.15]], label:'Pax Romana' },
     song: { color:'#2d6e5f', fill:'rgba(45,110,95,0.10)', pts: [[0,0.05],[15,0.25],[30,0.55],[45,0.8],[60,0.92],[70,0.88],[80,0.65],[90,0.3],[100,0.08]], label:'Song Dynasty' },
     renaissance: { color:'#c5a059', fill:'rgba(197,160,89,0.10)', pts: [[0,0.08],[10,0.35],[20,0.65],[35,0.9],[50,0.98],[60,0.85],[75,0.5],[90,0.2],[100,0.05]], label:'Renaissance' },
-    twenties: { color:'#c4442d', fill:'rgba(196,68,45,0.10)', pts: [[0,0.15],[15,0.45],[30,0.75],[50,0.95],[60,0.98],[65,0.6],[70,0.2],[80,0.08],[100,0.05]], label:'1920s (Crash)' },
+    dutch: { color:'#e67e22', fill:'rgba(230,126,34,0.10)', pts: [[0,0.08],[10,0.25],[20,0.5],[35,0.75],[50,0.88],[60,0.95],[70,0.92],[80,0.78],[90,0.5],[100,0.2]], label:'Dutch Republic' },
     golden: { color:'#44474e', fill:'rgba(68,71,78,0.10)', pts: [[0,0.1],[10,0.3],[25,0.55],[40,0.75],[55,0.88],[70,0.92],[80,0.85],[90,0.7],[100,0.55]], label:'1950s Golden' },
     nineties: { color:'#1a1c1b', fill:'rgba(26,28,27,0.08)', pts: [[0,0.2],[10,0.4],[25,0.6],[40,0.8],[55,0.92],[65,0.95],[75,0.88],[85,0.72],[100,0.6]], label:'1990s Info Age' },
   };
@@ -2180,12 +2247,12 @@ async function generateEraIntel() {
     forexSummary = 'USD/EUR Exchange Rate (Alpha Vantage):\n  ' + summariseSeries('USD/EUR', _chartData.forex);
   }
 
-  const eraKeys = ['romana', 'song', 'renaissance', 'twenties', 'golden', 'nineties'];
+  const eraKeys = ['romana', 'song', 'renaissance', 'dutch', 'golden', 'nineties'];
   const eraLabels = {
     romana: 'Pax Romana (27 BC–180 AD)',
     song: 'Song Dynasty (960–1279 AD)',
     renaissance: 'Italian Renaissance (1450–1600)',
-    twenties: 'Roaring Twenties (1920s USA)',
+    dutch: 'Dutch Golden Age (1580–1672)',
     golden: 'Golden Age USA (1950s)',
     nineties: 'Information Age (1990s)',
   };
@@ -2213,7 +2280,7 @@ Format your response EXACTLY as:
 ROMANA: [conclusion]
 SONG: [conclusion]
 RENAISSANCE: [conclusion]
-TWENTIES: [conclusion]
+DUTCH: [conclusion]
 GOLDEN: [conclusion]
 NINETIES: [conclusion]
 
@@ -2224,7 +2291,7 @@ Eras: ${eraKeys.map(k => eraLabels[k]).join(', ')}`;
     const lines = result.split('\n').filter(l => l.trim());
     const parsed = {};
     for (const line of lines) {
-      const match = line.match(/^(ROMANA|SONG|RENAISSANCE|TWENTIES|GOLDEN|NINETIES):\s*(.+)/i);
+      const match = line.match(/^(ROMANA|SONG|RENAISSANCE|DUTCH|GOLDEN|NINETIES):\s*(.+)/i);
       if (match) parsed[match[1].toLowerCase()] = match[2].trim();
     }
 
@@ -2301,16 +2368,31 @@ function loadAllRealCharts() {
   fetch('/api/fred?series=' + ids)
     .then(function(r) { return r.json(); })
     .then(function(json) {
-      var src = json.fallback ? 'cached' : 'live';
+      var src = json.fallback ? 'cached (build-time)' : 'live';
+      var srcIcon = json.fallback ? '⟳' : '✦';
       if (json.data) {
         Object.keys(SERIES_MAP).forEach(function(id) {
           if (json.data[id] && json.data[id].length) {
-            SERIES_MAP[id](json.data[id], src);
+            // Find latest data point date for display
+            var sorted = json.data[id].slice().sort(function(a,b) { return b.year - a.year; });
+            var latestDate = sorted[0] && sorted[0].date ? sorted[0].date : 'unknown';
+            SERIES_MAP[id](json.data[id], src + ' — latest: ' + latestDate);
           }
         });
       }
       if (json.errors && json.errors.length) {
         console.warn('[FRED] Some series had errors:', json.errors);
+        json.errors.forEach(function(e) {
+          // Show error on specific chart
+          var parts = e.split(':');
+          var failedId = parts[0] && parts[0].trim();
+          var fallbackKey = { DTWEXBGS:'dollar', PCU21222122:'gold', DCOILBRENTEU:'oil', T10Y2Y:'treasury', VIXCLS:'vix', DEXUSEU:'forex' };
+          var k = fallbackKey[failedId];
+          if (k) setStatus(k + '-status', '⚠ ' + e, 'error');
+        });
+      }
+      if (json.fallback) {
+        console.warn('[FRED] Using cached build-time data — live FRED fetch unavailable');
       }
     })
     .catch(function(err) {
@@ -2326,6 +2408,63 @@ try { loadAllRealCharts(); } catch(e) { console.error('Chart load error:', e); }
 
 // Initial calculation
 calculate();
+
+// =========================================================
+// ACTIVE NAV HIGHLIGHTING
+// =========================================================
+(function() {
+  const sections = document.querySelectorAll('section[id], .era-intel-section[id], .splash[id]');
+  const navLinks = document.querySelectorAll('.nav-links a');
+  if (!sections.length || !navLinks.length) return;
+
+  function updateActiveNav() {
+    let current = '';
+    sections.forEach(function(sec) {
+      const top = sec.offsetTop - 120;
+      if (window.scrollY >= top) current = sec.getAttribute('id');
+    });
+    navLinks.forEach(function(link) {
+      const href = link.getAttribute('href');
+      if (href === '#' + current) {
+        link.classList.add('active');
+      } else {
+        link.classList.remove('active');
+      }
+    });
+  }
+
+  window.addEventListener('scroll', updateActiveNav, { passive: true });
+  updateActiveNav();
+})();
+
+// =========================================================
+// IMPROVED AI ERROR FEEDBACK
+// =========================================================
+(function() {
+  // Add timeout warnings for AI panels
+  var aiPanels = [
+    { badge: 'playbook-badge', body: 'playbook-grid', timeout: 30000, name: 'Playbook' },
+    { badge: 'briefing-badge', body: 'ai-briefing-body', timeout: 30000, name: 'Briefing' },
+    { badge: 'fragility-badge', body: 'ai-fragility-body', timeout: 30000, name: 'Risk Assessment' }
+  ];
+
+  aiPanels.forEach(function(panel) {
+    var badge = document.getElementById(panel.badge);
+    if (!badge) return;
+    // Watch for generating state
+    var observer = new MutationObserver(function() {
+      if (badge.classList.contains('generating')) {
+        clearTimeout(badge._aiTimeout);
+        badge._aiTimeout = setTimeout(function() {
+          if (badge.classList.contains('generating')) {
+            badge.textContent = panel.name + ' — Taking longer than expected…';
+          }
+        }, panel.timeout);
+      }
+    });
+    observer.observe(badge, { attributes: true, attributeFilter: ['class'] });
+  });
+})();
 </script>
 
 </BaseLayout>
