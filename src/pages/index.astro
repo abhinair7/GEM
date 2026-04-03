@@ -177,7 +177,12 @@ const eraArtifacts: Record<string, string> = {
     </div>
   </div>
   <div class="feed-layout">
-    <div class="feed-stream" id="feed-stream"></div>
+    <div class="feed-stream" id="feed-stream">
+      <div class="feed-loading" id="feed-loading">
+        <div class="feed-loading-dot"></div>
+        <span>Fetching live intelligence from GDELT…</span>
+      </div>
+    </div>
     <div class="feed-impact-panel reveal">
       <div class="impact-panel-title">Cumulative Pillar Impact</div>
       <div class="impact-meter meter-trade"><div class="impact-meter-header"><span class="impact-meter-label">Trade Integration</span><span class="impact-meter-value" id="feed-trade">0.74</span></div><div class="meter-track"><div class="meter-fill" id="feed-trade-fill" style="width:74%"></div></div></div>
@@ -785,6 +790,9 @@ function addFeedItem(time, title, desc, impacts, isLive, url) {
   const linkHTML = url ? '<a href="'+url+'" target="_blank" rel="noopener">Source &rarr;</a>' : '';
   item.innerHTML = '<div class="feed-time">'+time+'</div><div class="feed-content"><h4>'+title+'</h4><p>'+desc+'</p>'+linkHTML+'</div><div class="feed-impact">'+impHTML+'</div>';
   stream.prepend(item);
+  // Remove loading placeholder if still present
+  var loadingEl = document.getElementById('feed-loading');
+  if (loadingEl) loadingEl.remove();
   // Trigger the CSS animation after a microtask so the browser registers the initial state
   requestAnimationFrame(() => { requestAnimationFrame(() => { item.classList.add('visible'); }); });
   // Auto-scroll feed to top smoothly

@@ -736,6 +736,28 @@ canvas { display: block; max-width: 100%; }
   color: rgba(255,255,255,0.25);
 }
 
+/* ========== FEED LOADING ========== */
+.feed-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 20px;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--outline);
+  font-style: italic;
+}
+.feed-loading-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--secondary);
+  animation: feedPulse 1.4s ease-in-out infinite;
+}
+@keyframes feedPulse {
+  0%, 100% { opacity: 0.25; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
 /* ========== ACTIVE NAV ========== */
 .nav-links a.active { color: var(--secondary); }
 .nav-links a { position: relative; }
