@@ -455,40 +455,17 @@ const eraArtifacts: Record<string, string> = {
   </div>
 </section>
 
-<!-- Footer -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <div class="brand">G<span>.</span>E<span>.</span>M</div>
-      <div class="footer-tagline">Geopolitical Equilibrium Model</div>
-    </div>
-    <div class="footer-links">
-      <div class="footer-col">
-        <div class="footer-col-title">Navigate</div>
-        <a href="#thesis">Thesis</a>
-        <a href="#livefeed">Live Feed</a>
-        <a href="#eras">Eras</a>
-        <a href="#simulation">Simulate</a>
-        <a href="#analysis">Analysis</a>
-        <a href="#era-intel">Intelligence</a>
-      </div>
-      <div class="footer-col">
-        <div class="footer-col-title">Connect</div>
-        <a href="https://linkedin.com/in/abhisheknair" target="_blank" rel="noopener">LinkedIn</a>
-        <a href="https://github.com/abhisheknair" target="_blank" rel="noopener">GitHub</a>
-        <a href="mailto:abhishek@example.com">Email</a>
-      </div>
-      <div class="footer-col">
-        <div class="footer-col-title">Data Sources</div>
-        <a href="https://fred.stlouisfed.org" target="_blank" rel="noopener">FRED API</a>
-        <a href="https://www.gdeltproject.org" target="_blank" rel="noopener">GDELT Project</a>
-        <a href="https://cerebras.ai" target="_blank" rel="noopener">Cerebras AI</a>
-      </div>
-    </div>
+<!-- Footer — 3D Orbit Ring -->
+<footer class="footer-orbit-section">
+  <div class="footer-orbit-brand">
+    <div class="footer-orbit-gem">G<span>.</span>E<span>.</span>M</div>
+    <div class="footer-orbit-sub">Geopolitical Equilibrium Model</div>
   </div>
-  <div class="footer-bottom">
-    <div class="meta">Sovereign Intelligence Archive — Abhishek Nair</div>
-    <div class="footer-tech">Built with Astro, Canvas 2D, GSAP & Cerebras AI</div>
+  <div class="footer-orbit-ring-wrap" aria-hidden="true">
+    <div class="footer-orbit-ring" id="footer-orbit-ring"></div>
+  </div>
+  <div class="footer-orbit-credit">
+    <span>Sovereign Intelligence Archive — Abhishek Nair</span>
   </div>
 </footer>
 
@@ -722,6 +699,29 @@ if (splash) {
     var angle = (i / words.length) * 360;
     var span = document.createElement('span');
     span.className = 'splash-orbit-word ' + w.cls;
+    span.textContent = w.text;
+    span.style.transform = 'translate(-50%,-50%) rotateY(' + angle + 'deg) translateZ(' + radius + 'px)';
+    ring.appendChild(span);
+  });
+})();
+
+// Footer 3D orbit ring
+(function() {
+  var ring = document.getElementById('footer-orbit-ring');
+  if (!ring) return;
+  var words = [
+    { text: 'Equilibrium',  cls: 'gold'  },
+    { text: 'Trade',        cls: 'white' },
+    { text: 'Stability',    cls: 'gold'  },
+    { text: 'Empire',       cls: 'white' },
+    { text: 'Strategy',     cls: 'gold'  },
+    { text: 'Prosperity',   cls: 'white' }
+  ];
+  var radius = 140;
+  words.forEach(function(w, i) {
+    var angle = (i / words.length) * 360;
+    var span = document.createElement('span');
+    span.className = 'footer-orbit-word ' + w.cls;
     span.textContent = w.text;
     span.style.transform = 'translate(-50%,-50%) rotateY(' + angle + 'deg) translateZ(' + radius + 'px)';
     ring.appendChild(span);

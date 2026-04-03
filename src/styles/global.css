@@ -670,21 +670,71 @@ canvas { display: block; max-width: 100%; }
 .era-intel-body strong { color: var(--on-surface); font-weight: 600; }
 .era-intel-body em { color: var(--secondary); font-style: italic; }
 
-/* ========== FOOTER ========== */
-footer { position: relative; z-index: 2; padding: 0 48px; border-top: 1px solid rgba(0,0,0,0.06); }
-footer .brand { font-family: 'Newsreader', serif; font-size: 1.2rem; }
-footer .brand span { color: var(--secondary); }
-footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--outline); }
-.footer-top { display: flex; justify-content: space-between; align-items: flex-start; padding: 60px 0 40px; }
-.footer-brand { display: flex; flex-direction: column; gap: 8px; }
-.footer-tagline { font-size: 0.6875rem; color: var(--outline); letter-spacing: 0.05em; }
-.footer-links { display: flex; gap: 64px; }
-.footer-col { display: flex; flex-direction: column; gap: 10px; }
-.footer-col-title { font-size: 0.5625rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--outline); font-weight: 600; margin-bottom: 4px; }
-.footer-col a { font-size: 0.75rem; color: var(--on-surface-variant); text-decoration: none; transition: color 0.3s; }
-.footer-col a:hover { color: var(--secondary); }
-.footer-bottom { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-top: 1px solid rgba(0,0,0,0.06); }
-.footer-tech { font-size: 0.5625rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--outline); }
+/* ========== FOOTER — 3D ORBIT RING ========== */
+.footer-orbit-section {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px 48px;
+  background: #1a1c1b;
+  overflow: hidden;
+}
+.footer-orbit-brand {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.footer-orbit-gem {
+  font-family: 'Newsreader', serif;
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.footer-orbit-gem span { color: rgba(197,160,89,0.9); }
+.footer-orbit-sub {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-top: 6px;
+}
+.footer-orbit-ring-wrap {
+  position: relative;
+  width: 420px;
+  height: 80px;
+  perspective: 900px;
+  margin: 32px 0 40px;
+}
+.footer-orbit-ring {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: orbitSpin 20s linear infinite;
+}
+.footer-orbit-word {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-family: 'Newsreader', serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  backface-visibility: hidden;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.6);
+}
+.footer-orbit-word.gold  { color: rgba(197,160,89,0.85); }
+.footer-orbit-word.white { color: rgba(255,255,255,0.7); }
+.footer-orbit-credit {
+  font-size: 0.5625rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+}
 
 /* ========== ACTIVE NAV ========== */
 .nav-links a.active { color: var(--secondary); }
@@ -758,10 +808,8 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .chart-latest strong { font-size: 0.85rem; }
   .range-btn { padding: 2px 8px; font-size: 0.55rem; }
   .data-table-wrap { font-size: 0.65rem; }
-  footer { padding: 0 20px; }
-  .footer-top { flex-direction: column; gap: 36px; }
-  .footer-links { flex-direction: column; gap: 28px; }
-  .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+  .footer-orbit-ring-wrap { width: 340px; height: 70px; }
+  .footer-orbit-word { font-size: 1rem; }
   .data-table-wrap { position: relative; }
   .data-table-wrap::after { content: 'Scroll \2192'; position: absolute; top: 0; right: 0; font-size: 0.5625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--outline); padding: 4px 8px; background: var(--surface); }
 }
@@ -814,4 +862,8 @@ footer .meta { font-size: 0.625rem; letter-spacing: 0.1em; text-transform: upper
   .data-table { font-size: 0.625rem; }
   .data-table thead th { padding: 8px 10px; font-size: 0.5rem; }
   .data-table tbody td { padding: 10px; }
+  .footer-orbit-section { padding: 60px 16px 36px; }
+  .footer-orbit-gem { font-size: 1.8rem; }
+  .footer-orbit-ring-wrap { width: 280px; height: 60px; }
+  .footer-orbit-word { font-size: 0.9rem; }
 }
