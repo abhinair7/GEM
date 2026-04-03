@@ -675,15 +675,19 @@ if (splash) {
       // Unlock scroll NOW
       document.documentElement.style.overflow = '';
 
-      // Simple scroll listener for scroll-back close/reopen
-      let splashH = splash.offsetHeight;
+      // Scroll-back close/reopen — only AFTER user has scrolled past splash once
+      var splashH = splash.offsetHeight;
+      var hasLeftSplash = false;
       window.addEventListener('scroll', function() {
         var y = window.scrollY || window.pageYOffset;
-        if (y < splashH * 0.3 && curtainsOpen && !animating) {
-          // User scrolled back near the top — close curtains
+        // Don't activate scroll-back until user has actually scrolled past the splash
+        if (!hasLeftSplash) {
+          if (y >= splashH * 0.6) hasLeftSplash = true;
+          return;
+        }
+        if (y < splashH * 0.25 && curtainsOpen && !animating) {
           closeCurtains();
         } else if (y >= splashH * 0.5 && !curtainsOpen && !animating) {
-          // User scrolled past splash — reopen curtains
           openCurtains();
         }
       }, { passive: true });
