@@ -424,6 +424,7 @@ const eraArtifacts: Record<string, string> = {
         <p class="reveal">AI analyses the live economic data above and classifies conclusions into each of the six historical prosperity architectures.</p>
       </div>
       <button class="era-intel-btn" id="era-intel-btn"><span class="ai-dot"></span> Generate Era Intelligence</button>
+      <div class="era-intel-meta" id="era-intel-meta" style="font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(197,160,89,0.6);margin-top:8px;display:none;"></div>
     </div>
     <div class="era-intel-grid" id="era-intel-grid">
       <div class="era-intel-card" data-era="romana">
@@ -564,7 +565,7 @@ async function generateAIPlaybook(input, eraName, eraDate) {
   const badge = document.getElementById('playbook-badge');
   badge.textContent = '⟳ Generating…'; badge.className = 'ai-badge generating';
   try {
-    const prompt = `The GEM simulation has these Prosperity Pillar values:\n- Trade Integration: ${input.trade.toFixed(2)}\n- Political Stability: ${input.politics.toFixed(2)}\n- Security Level: ${input.security.toFixed(2)}\n- Benefit Capture: ${input.benefit.toFixed(2)}\n\nThe closest historical analogue is: ${eraName} (${eraDate}).\n\nGenerate exactly 3 specific U.S.–Iran strategic moves for this configuration. For each move, provide a bold title (5 words max) and a 2-sentence tactical description referencing real mechanisms (sanctions, naval deployments, diplomatic channels, cyber operations, energy markets, alliance structures).\n\nFormat as:\nSTRATEGY 1: [Title]\n[Description]\n\nSTRATEGY 2: [Title]\n[Description]\n\nSTRATEGY 3: [Title]\n[Description]`;
+    const prompt = `The GEM simulation has these Prosperity Pillar values:\n- Trade Integration: ${input.trade.toFixed(2)}\n- Political Stability: ${input.politics.toFixed(2)}\n- Security Level: ${input.security.toFixed(2)}\n- Benefit Capture: ${input.benefit.toFixed(2)}\n\nThe closest historical analogue is: ${eraName} (${eraDate}).\n\nIMPORTANT: Maintain strict analytical neutrality. Do not favour U.S. or Iranian interests. Frame strategies as neutral strategic options, acknowledging costs and trade-offs for both sides.\n\nGenerate exactly 3 specific U.S.–Iran strategic moves for this configuration. For each move, provide a bold title (5 words max) and a 2-sentence tactical description referencing real mechanisms (sanctions, naval deployments, diplomatic channels, cyber operations, energy markets, alliance structures).\n\nFormat as:\nSTRATEGY 1: [Title]\n[Description]\n\nSTRATEGY 2: [Title]\n[Description]\n\nSTRATEGY 3: [Title]\n[Description]`;
     const text = await callAI(prompt, 500);
     const strategies = text.split(/STRATEGY \d+:\s*/i).filter(s => s.trim()).map(block => {
       const lines = block.trim().split('\n').filter(l => l.trim());
@@ -589,7 +590,7 @@ async function generateFragilityAnalysis(input, eraName, fragility) {
   const badge = document.getElementById('fragility-badge');
   badge.textContent = '⟳ Assessing…'; badge.className = 'ai-badge generating';
   try {
-    const prompt = `A geopolitical simulation has the following configuration:\n- Trade Integration: ${input.trade.toFixed(2)} (${input.trade > 0.7 ? 'high openness' : input.trade > 0.4 ? 'moderate' : 'isolated'})\n- Political Stability: ${input.politics.toFixed(2)} (${input.politics > 0.7 ? 'strong central authority' : input.politics > 0.4 ? 'moderate cohesion' : 'fragmented'})\n- Security Level: ${input.security.toFixed(2)} (${input.security > 0.7 ? 'secure borders' : input.security > 0.4 ? 'contested' : 'highly vulnerable'})\n- Benefit Capture: ${input.benefit.toFixed(2)} (${input.benefit > 0.5 ? 'elite-concentrated' : 'broadly distributed'})\n- Matched Era: ${eraName}\n- Computed Fragility: ${fragility}%\n\nWrite a 4-sentence risk assessment identifying: (1) the primary structural vulnerability in this configuration, (2) the most likely cascading failure trigger, (3) a historical parallel for how this failure mode played out, and (4) one specific policy lever that could reduce fragility by 15+ points.`;
+    const prompt = `A geopolitical simulation has the following configuration:\n- Trade Integration: ${input.trade.toFixed(2)} (${input.trade > 0.7 ? 'high openness' : input.trade > 0.4 ? 'moderate' : 'isolated'})\n- Political Stability: ${input.politics.toFixed(2)} (${input.politics > 0.7 ? 'strong central authority' : input.politics > 0.4 ? 'moderate cohesion' : 'fragmented'})\n- Security Level: ${input.security.toFixed(2)} (${input.security > 0.7 ? 'secure borders' : input.security > 0.4 ? 'contested' : 'highly vulnerable'})\n- Benefit Capture: ${input.benefit.toFixed(2)} (${input.benefit > 0.5 ? 'elite-concentrated' : 'broadly distributed'})\n- Matched Era: ${eraName}\n- Computed Fragility: ${fragility}%\n\nIMPORTANT: Maintain strict analytical neutrality. Do not frame analysis from a U.S.-centric or Iran-centric perspective. Present risks and vulnerabilities objectively, applicable to both state actors.\n\nWrite a 4-sentence risk assessment identifying: (1) the primary structural vulnerability in this configuration, (2) the most likely cascading failure trigger, (3) a historical parallel for how this failure mode played out, and (4) one specific policy lever that could reduce fragility by 15+ points.`;
     const text = await callAI(prompt, 400);
     document.getElementById('ai-fragility-body').innerHTML = text.replace(/\n\n/g, '<br><br>');
     badge.textContent = '✦ AI Risk Assessment'; badge.className = 'ai-badge active';
@@ -2289,6 +2290,8 @@ async function generateEraIntel() {
   const timestamp = new Date().toISOString();
   const prompt = `You are a senior geopolitical intelligence analyst for the Geopolitical Equilibrium Model (GEM). Timestamp: ${timestamp}
 
+IMPORTANT: Maintain strict analytical neutrality. Do not take a pro-U.S. or pro-Iran position. Analyse data objectively through each historical lens, acknowledging both sides' strategic calculus, vulnerabilities, and leverage points. Present facts and trends without ideological framing.
+
 Below is LIVE economic data fetched moments ago from the Federal Reserve Economic Data (FRED) API and Alpha Vantage authenticated API — six indicators covering currency strength, safe-haven demand, energy markets, recession risk, market volatility, and forex dynamics. Analyse these EXACT numbers — do not use generic or memorised data:
 
 1. ${dollarSummary}
@@ -2335,8 +2338,17 @@ Eras: ${eraKeys.map(k => eraLabels[k]).join(', ')}`;
       }
     }
     eraIntelGenerated = true;
-    btn.textContent = '✓ Intelligence Generated';
+    const genTime = new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true, timeZone:'America/New_York' });
+    btn.textContent = '↻ Regenerate Intelligence';
     btn.classList.remove('generating');
+    btn.disabled = false;
+    const meta = document.getElementById('era-intel-meta');
+    meta.style.display = 'block';
+    meta.textContent = '✦ Last generated: ' + genTime + ' EST — Live FRED data · Auto-refreshes every 5 min';
+    // Schedule auto-regeneration every 5 minutes
+    if (!window._eraIntelTimer) {
+      window._eraIntelTimer = setInterval(function() { generateEraIntel(); }, 300000);
+    }
   } catch (err) {
     console.error('Era intel AI error:', err);
     btn.textContent = '✗ Generation Failed — Retry';

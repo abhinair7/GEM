@@ -15,11 +15,11 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-// Primary: Tight Iran-US focused query
+// Primary: Balanced Iran-US focused query (both perspectives)
 const GDELT_PRIMARY = 'https://api.gdeltproject.org/api/v2/doc/doc?' +
-  'query=(iran OR tehran OR persian OR hormuz OR irgc) (united states OR washington OR pentagon OR sanctions OR nuclear)' +
+  'query=(iran OR tehran OR persian OR hormuz OR irgc OR pezeshkian) (united states OR washington OR pentagon OR sanctions OR nuclear OR diplomacy OR negotiation)' +
   ' sourcelang:english' +
-  '&mode=ArtList&maxrecords=12&format=json&sort=DateDesc';
+  '&mode=ArtList&maxrecords=15&format=json&sort=DateDesc';
 
 // Fallback: Broader Middle East geopolitics
 const GDELT_FALLBACK = 'https://api.gdeltproject.org/api/v2/doc/doc?' +
