@@ -44,9 +44,7 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
 
 /* ========== SPLASH — ARCHITECTS SPLIT ========== */
 .splash {
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: relative;
   width: 100%;
   height: 100vh;
   z-index: 200;
@@ -54,12 +52,6 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
   background: #1a1c1b;
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
-  transition: opacity 0.4s ease;
-}
-.splash.dismissed {
-  opacity: 0;
-  pointer-events: none;
-  z-index: -1;
 }
 .splash-half {
   position: absolute;

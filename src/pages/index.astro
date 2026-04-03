@@ -611,13 +611,10 @@ function euclideanDist(a, b) {
 // =========================================================
 gsap.registerPlugin(ScrollTrigger);
 
-// Splash — smooth one-time curtain dismiss
+// Splash — smooth one-time curtain dismiss (position:relative, in document flow)
 const splash = document.getElementById('splash');
 if (splash) {
   let splashDismissed = false;
-
-  // Lock body scroll while splash is visible so scroll doesn't move page behind
-  document.body.style.overflow = 'hidden';
 
   function dismissSplash() {
     if (splashDismissed) return;
@@ -626,17 +623,7 @@ if (splash) {
     window.removeEventListener('touchmove', dismissSplash, { capture: true });
     window.removeEventListener('keydown', dismissOnKey, { capture: true });
 
-    const tl = gsap.timeline({
-      onComplete: function() {
-        // After reveal text is shown, wait 2.5s then fade out the entire splash overlay
-        setTimeout(function() {
-          splash.classList.add('dismissed');
-          // Unlock body scroll so user can explore the site
-          document.body.style.overflow = '';
-          window.scrollTo(0, 0);
-        }, 2500);
-      }
-    });
+    const tl = gsap.timeline();
     tl
       .to('.splash-scroll-cue', { opacity: 0, duration: 0.15, ease: 'none' }, 0)
       .to('.splash-title-wrap', { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power2.in' }, 0)
