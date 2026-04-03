@@ -618,8 +618,8 @@ if (splash) {
     scrollTrigger: {
       trigger: splash,
       start: 'top top',
-      end: () => '+=' + (window.innerHeight * 1.5),
-      scrub: 0.5,
+      end: () => '+=' + (window.innerHeight * 0.35),
+      scrub: 0.15,
       pin: true,
       pinSpacing: true,
       anticipatePin: 1,
@@ -755,37 +755,22 @@ function isRelevantTitle(title) {
 
 function fetchGNews() {
   document.getElementById('feed-source-tag').textContent = '⟳ Fetching live intel…';
-  var gdeltUrl = 'https://api.gdeltproject.org/api/v2/doc/doc?query=iran%20sourcelang:english&mode=ArtList&maxrecords=15&format=json&sort=DateDesc';
-  fetch(gdeltUrl)
+  var newsUrl = '/api/news?t=' + Date.now();
+  fetch(newsUrl)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      var articles = (data.articles || [])
-        .filter(function(a) { return isRelevantTitle(a.title || ''); })
-        .slice(0, 8)
-        .map(function(a) {
-          var time = '';
-          if (a.seendate && a.seendate.length >= 15) {
-            time = a.seendate.slice(0,4)+'-'+a.seendate.slice(4,6)+'-'+a.seendate.slice(6,8)+'T'+
-                   a.seendate.slice(9,11)+':'+a.seendate.slice(11,13)+':'+a.seendate.slice(13,15)+'Z';
-          }
-          return {
-            title: (a.title || 'Untitled').replace(/ - [^-]+$/, ''),
-            desc: a.domain ? 'Source: ' + a.domain : '',
-            url: a.url || '',
-            time: time
-          };
-        });
+      var articles = (data.articles || []).slice(0, 8);
       if (articles.length >= 2) {
         document.getElementById('feed-source-tag').textContent = 'GDELT API — LIVE';
         dripArticles(articles);
       } else {
-        console.log('Insufficient relevant GDELT articles — using simulated feed');
+        console.log('Insufficient GDELT articles — using simulated feed');
         document.getElementById('feed-source-tag').textContent = 'SIMULATED SCENARIO';
         loadFallback();
       }
     })
     .catch(function(err) {
-      console.error('GDELT fetch error:', err);
+      console.error('News fetch error:', err);
       document.getElementById('feed-source-tag').textContent = 'SIMULATED SCENARIO';
       loadFallback();
     });

@@ -50,6 +50,8 @@ nav { position: fixed; top: 0; left: 0; right: 0; height: 56px; display: flex; a
   z-index: 200;
   overflow: hidden;
   background: #1a1c1b;
+  touch-action: pan-y;           /* ensure iOS passes vertical swipes to ScrollTrigger */
+  -webkit-overflow-scrolling: touch;
 }
 .splash-half {
   position: absolute;

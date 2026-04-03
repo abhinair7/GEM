@@ -106,7 +106,7 @@ export const GET: APIRoute = async () => {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=1200', // 10-min cache (GDELT is slow ~20s)
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120', // 1-min cache for freshness
       },
     });
   } catch (e: any) {
